@@ -1754,6 +1754,12 @@ function wirePlayer(root,unused=false,restoreState=null){
           onStateChange:e=>{
             if(e.data===YT.PlayerState.PLAYING){
               hidePoster();
+              if(it.playlistId){
+                lastAudioYTThumbVideoId="";
+                setAudioCoverFromCurrentVideo();
+                setTimeout(setAudioCoverFromCurrentVideo,180);
+                setTimeout(setAudioCoverFromCurrentVideo,500);
+              }
               setPlayIcon(true);
             }
             if(e.data===YT.PlayerState.PAUSED){
@@ -1761,6 +1767,11 @@ function wirePlayer(root,unused=false,restoreState=null){
             }
             if(e.data===YT.PlayerState.CUED){
               setPosterFromCurrentVideo();
+              if(it.playlistId){
+                lastAudioYTThumbVideoId="";
+                setAudioCoverFromCurrentVideo();
+                setTimeout(setAudioCoverFromCurrentVideo,250);
+              }
               showPoster();
               setPlayIcon(false);
             }
@@ -2519,6 +2530,12 @@ function wireStandalone(root){
           onStateChange:e=>{
             if(e.data===YT.PlayerState.PLAYING){
               hidePoster();
+              if(it.playlistId){
+                lastAudioYTThumbVideoId="";
+                setAudioCoverFromCurrentVideo();
+                setTimeout(setAudioCoverFromCurrentVideo,180);
+                setTimeout(setAudioCoverFromCurrentVideo,500);
+              }
               setIcon(true);
             }
             if(e.data===YT.PlayerState.PAUSED){
@@ -2526,6 +2543,11 @@ function wireStandalone(root){
             }
             if(e.data===YT.PlayerState.CUED){
               setPosterFromCurrentVideo();
+              if(it.playlistId){
+                lastAudioYTThumbVideoId="";
+                setAudioCoverFromCurrentVideo();
+                setTimeout(setAudioCoverFromCurrentVideo,250);
+              }
               showPoster();
               setIcon(false);
             }
