@@ -1599,10 +1599,23 @@ function wirePlayer(root,unused=false,restoreState=null){
   async function mountYouTube(it,autoplay=false,visibleHost=null){
     cleanupYT();
 
-    const cover=root.querySelector(".cover");
+    let cover=root.querySelector(".cover");
+    if(project.mode==="audio" && project.appearance.showThumb && cover && cover.tagName!=="IMG"){
+      const img=document.createElement("img");
+      img.className="cover";
+      img.alt=it.name||"";
+      img.draggable=false;
+      img.style.borderRadius=(project.appearance.thumbRadius||16)+"px";
+      cover.replaceWith(img);
+      cover=img;
+    }
     if(cover&&cover.tagName==="IMG"&&project.mode==="audio"){
-      cover.src=it.thumb||project.defaultThumb||(it.src?youtubeThumb(it.src):"");
-      cover.onerror=()=>{if(it.src)cover.src="https://img.youtube.com/vi/"+it.src+"/hqdefault.jpg"};
+      const custom=it.thumb||project.defaultThumb||"";
+      if(custom) cover.src=custom;
+      else if(!it.playlistId && it.src){
+        cover.src=youtubeThumb(it.src);
+        cover.onerror=()=>{cover.onerror=null;cover.src="https://img.youtube.com/vi/"+it.src+"/hqdefault.jpg"};
+      }else cover.removeAttribute("src");
     }
 
     try{
@@ -1652,37 +1665,19 @@ function wirePlayer(root,unused=false,restoreState=null){
         targetId=holder.id;
       }
 
-      const updateYouTubeAudioThumbnail=()=>{
-  if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
-
-  // Explicit custom thumbnail wins. Otherwise follow the CURRENT video of the YT playlist.
-  const custom=(project.appearance.showThumb && (it.thumb||project.defaultThumb))
-    ? (it.thumb||project.defaultThumb)
-    : "";
-
-  if(custom){
-    cover.onerror=null;
-    cover.src=custom;
-    return;
-  }
-
-  try{
-    const data=ytPlayer?.getVideoData?.();
-    const vid=data?.video_id||"";
-    if(!vid)return;
-
-    const max="https://img.youtube.com/vi/"+vid+"/maxresdefault.jpg";
-    const hq ="https://img.youtube.com/vi/"+vid+"/hqdefault.jpg";
-
-    cover.onerror=()=>{
-      cover.onerror=null;
-      if(cover.src!==hq)cover.src=hq;
+      const setAudioCoverFromCurrentVideo=()=>{
+      if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
+      if(it.thumb||project.defaultThumb)return;
+      try{
+        const data=ytPlayer.getVideoData?.();
+        const id=data?.video_id||"";
+        if(!id)return;
+        cover.onerror=()=>{cover.onerror=null;cover.src="https://img.youtube.com/vi/"+id+"/hqdefault.jpg"};
+        cover.src="https://img.youtube.com/vi/"+id+"/maxresdefault.jpg";
+      }catch(e){}
     };
-    cover.src=max;
-  }catch(e){}
-};
 
-const setPosterFromCurrentVideo=()=>{
+    const setPosterFromCurrentVideo=()=>{
         if(!poster)return;
         if(project.appearance.showThumb && (it.thumb||project.defaultThumb))return;
         try{
@@ -1724,10 +1719,7 @@ const setPosterFromCurrentVideo=()=>{
                 ytPlayer.cuePlaylist({list:it.playlistId,listType:"playlist",index:0});
                 try{ytPlayer.setLoop(!!project.options.loop)}catch(e){}
                 try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(e){}
-                setTimeout(()=>{
-            setPosterFromCurrentVideo();
-            updateYouTubeAudioThumbnail();
-          },500);
+                setTimeout(()=>{setPosterFromCurrentVideo();setAudioCoverFromCurrentVideo()},700);
               }
 
               const restoring=restoreState &&
@@ -2005,7 +1997,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
-        setTimeout(updateYouTubeAudioThumbnail,350);
+        setTimeout(setAudioCoverFromCurrentVideo,700);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setPlayIcon(true);
@@ -2040,7 +2032,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
-        setTimeout(updateYouTubeAudioThumbnail,350);
+        setTimeout(setAudioCoverFromCurrentVideo,700);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setPlayIcon(true);
@@ -2370,10 +2362,23 @@ function wireStandalone(root){
   async function mountYT(it,autoplay=false,visibleHost=null){
     cleanupYT();
 
-    const cover=root.querySelector(".cover");
+    let cover=root.querySelector(".cover");
+    if(project.mode==="audio" && project.appearance.showThumb && cover && cover.tagName!=="IMG"){
+      const img=document.createElement("img");
+      img.className="cover";
+      img.alt=it.name||"";
+      img.draggable=false;
+      img.style.borderRadius=(project.appearance.thumbRadius||16)+"px";
+      cover.replaceWith(img);
+      cover=img;
+    }
     if(cover&&cover.tagName==="IMG"&&project.mode==="audio"){
-      cover.src=it.thumb||project.defaultThumb||(it.src?"https://img.youtube.com/vi/"+it.src+"/maxresdefault.jpg":"");
-      cover.onerror=()=>{if(it.src)cover.src="https://img.youtube.com/vi/"+it.src+"/hqdefault.jpg"};
+      const custom=it.thumb||project.defaultThumb||"";
+      if(custom) cover.src=custom;
+      else if(!it.playlistId && it.src){
+        cover.src="https://img.youtube.com/vi/"+it.src+"/maxresdefault.jpg";
+        cover.onerror=()=>{cover.onerror=null;cover.src="https://img.youtube.com/vi/"+it.src+"/hqdefault.jpg"};
+      }else cover.removeAttribute("src");
     }
 
     try{
@@ -2422,37 +2427,19 @@ function wireStandalone(root){
         targetId=holder.id;
       }
 
-      const updateYouTubeAudioThumbnail=()=>{
-  if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
-
-  // Explicit custom thumbnail wins. Otherwise follow the CURRENT video of the YT playlist.
-  const custom=(project.appearance.showThumb && (it.thumb||project.defaultThumb))
-    ? (it.thumb||project.defaultThumb)
-    : "";
-
-  if(custom){
-    cover.onerror=null;
-    cover.src=custom;
-    return;
-  }
-
-  try{
-    const data=ytPlayer?.getVideoData?.();
-    const vid=data?.video_id||"";
-    if(!vid)return;
-
-    const max="https://img.youtube.com/vi/"+vid+"/maxresdefault.jpg";
-    const hq ="https://img.youtube.com/vi/"+vid+"/hqdefault.jpg";
-
-    cover.onerror=()=>{
-      cover.onerror=null;
-      if(cover.src!==hq)cover.src=hq;
+      const setAudioCoverFromCurrentVideo=()=>{
+      if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
+      if(it.thumb||project.defaultThumb)return;
+      try{
+        const data=ytPlayer.getVideoData?.();
+        const id=data?.video_id||"";
+        if(!id)return;
+        cover.onerror=()=>{cover.onerror=null;cover.src="https://img.youtube.com/vi/"+id+"/hqdefault.jpg"};
+        cover.src="https://img.youtube.com/vi/"+id+"/maxresdefault.jpg";
+      }catch(e){}
     };
-    cover.src=max;
-  }catch(e){}
-};
 
-const setPosterFromCurrentVideo=()=>{
+    const setPosterFromCurrentVideo=()=>{
         if(!poster)return;
         if(project.appearance.showThumb && (it.thumb||project.defaultThumb))return;
         try{
@@ -2494,10 +2481,7 @@ const setPosterFromCurrentVideo=()=>{
                 ytPlayer.cuePlaylist({list:it.playlistId,listType:"playlist",index:0});
                 try{ytPlayer.setLoop(!!project.options.loop)}catch(e){}
                 try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(e){}
-                setTimeout(()=>{
-            setPosterFromCurrentVideo();
-            updateYouTubeAudioThumbnail();
-          },500);
+                setTimeout(()=>{setPosterFromCurrentVideo();setAudioCoverFromCurrentVideo()},700);
               }
 
               const restoring=false;
@@ -2768,7 +2752,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
-        setTimeout(updateYouTubeAudioThumbnail,350);
+        setTimeout(setAudioCoverFromCurrentVideo,700);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setIcon(true);
@@ -2803,7 +2787,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
-        setTimeout(updateYouTubeAudioThumbnail,350);
+        setTimeout(setAudioCoverFromCurrentVideo,700);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setIcon(true);
