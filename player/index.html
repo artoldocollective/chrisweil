@@ -1652,25 +1652,33 @@ function wirePlayer(root,unused=false,restoreState=null){
         targetId=holder.id;
       }
 
-      const setAudioCoverFromCurrentVideo=()=>{
+      const updateYouTubeAudioThumbnail=()=>{
   if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
 
-  // A custom item/default thumbnail remains authoritative.
-  const customCover=project.appearance.showThumb?(it.thumb||project.defaultThumb||""):"";
-  if(customCover){
-    cover.src=customCover;
+  // Explicit custom thumbnail wins. Otherwise follow the CURRENT video of the YT playlist.
+  const custom=(project.appearance.showThumb && (it.thumb||project.defaultThumb))
+    ? (it.thumb||project.defaultThumb)
+    : "";
+
+  if(custom){
+    cover.onerror=null;
+    cover.src=custom;
     return;
   }
 
   try{
     const data=ytPlayer?.getVideoData?.();
-    if(data?.video_id){
-      cover.onerror=()=>{
-        cover.onerror=null;
-        cover.src="https://img.youtube.com/vi/"+data.video_id+"/hqdefault.jpg";
-      };
-      cover.src="https://img.youtube.com/vi/"+data.video_id+"/maxresdefault.jpg";
-    }
+    const vid=data?.video_id||"";
+    if(!vid)return;
+
+    const max="https://img.youtube.com/vi/"+vid+"/maxresdefault.jpg";
+    const hq ="https://img.youtube.com/vi/"+vid+"/hqdefault.jpg";
+
+    cover.onerror=()=>{
+      cover.onerror=null;
+      if(cover.src!==hq)cover.src=hq;
+    };
+    cover.src=max;
   }catch(e){}
 };
 
@@ -1718,7 +1726,7 @@ const setPosterFromCurrentVideo=()=>{
                 try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(e){}
                 setTimeout(()=>{
             setPosterFromCurrentVideo();
-            setAudioCoverFromCurrentVideo();
+            updateYouTubeAudioThumbnail();
           },500);
               }
 
@@ -1997,6 +2005,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
+        setTimeout(updateYouTubeAudioThumbnail,350);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setPlayIcon(true);
@@ -2031,6 +2040,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
+        setTimeout(updateYouTubeAudioThumbnail,350);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setPlayIcon(true);
@@ -2412,25 +2422,33 @@ function wireStandalone(root){
         targetId=holder.id;
       }
 
-      const setAudioCoverFromCurrentVideo=()=>{
+      const updateYouTubeAudioThumbnail=()=>{
   if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
 
-  // A custom item/default thumbnail remains authoritative.
-  const customCover=project.appearance.showThumb?(it.thumb||project.defaultThumb||""):"";
-  if(customCover){
-    cover.src=customCover;
+  // Explicit custom thumbnail wins. Otherwise follow the CURRENT video of the YT playlist.
+  const custom=(project.appearance.showThumb && (it.thumb||project.defaultThumb))
+    ? (it.thumb||project.defaultThumb)
+    : "";
+
+  if(custom){
+    cover.onerror=null;
+    cover.src=custom;
     return;
   }
 
   try{
     const data=ytPlayer?.getVideoData?.();
-    if(data?.video_id){
-      cover.onerror=()=>{
-        cover.onerror=null;
-        cover.src="https://img.youtube.com/vi/"+data.video_id+"/hqdefault.jpg";
-      };
-      cover.src="https://img.youtube.com/vi/"+data.video_id+"/maxresdefault.jpg";
-    }
+    const vid=data?.video_id||"";
+    if(!vid)return;
+
+    const max="https://img.youtube.com/vi/"+vid+"/maxresdefault.jpg";
+    const hq ="https://img.youtube.com/vi/"+vid+"/hqdefault.jpg";
+
+    cover.onerror=()=>{
+      cover.onerror=null;
+      if(cover.src!==hq)cover.src=hq;
+    };
+    cover.src=max;
   }catch(e){}
 };
 
@@ -2478,7 +2496,7 @@ const setPosterFromCurrentVideo=()=>{
                 try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(e){}
                 setTimeout(()=>{
             setPosterFromCurrentVideo();
-            setAudioCoverFromCurrentVideo();
+            updateYouTubeAudioThumbnail();
           },500);
               }
 
@@ -2750,6 +2768,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
+        setTimeout(updateYouTubeAudioThumbnail,350);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setIcon(true);
@@ -2784,6 +2803,7 @@ const setPosterFromCurrentVideo=()=>{
           index:target,
           startSeconds:0
         });
+        setTimeout(updateYouTubeAudioThumbnail,350);
         try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
         try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setIcon(true);
