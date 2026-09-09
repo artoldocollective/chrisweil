@@ -1961,10 +1961,19 @@ function wirePlayer(root,unused=false,restoreState=null){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
-        ytPlayer.previousVideo();
+        const list=ytPlayer.getPlaylist?.()||[];
+        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
+        if(list.length){
+          const target=Math.max(0,pi-1);
+          ytPlayer.playVideoAt(target);
+        }else{
+          ytPlayer.previousVideo();
+        }
         setPlayIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
-      }catch(e){}
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
+      }catch(e){
+        try{ytPlayer.previousVideo();ytPlayer.playVideo()}catch(_){}
+      }
       return;
     }
 
@@ -1978,10 +1987,20 @@ function wirePlayer(root,unused=false,restoreState=null){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
-        ytPlayer.nextVideo();
+        const list=ytPlayer.getPlaylist?.()||[];
+        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
+        if(list.length){
+          let target=pi+1;
+          if(target>=list.length)target=project.options.loop?0:list.length-1;
+          ytPlayer.playVideoAt(target);
+        }else{
+          ytPlayer.nextVideo();
+        }
         setPlayIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
-      }catch(e){}
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
+      }catch(e){
+        try{ytPlayer.nextVideo();ytPlayer.playVideo()}catch(_){}
+      }
       return;
     }
 
@@ -2661,10 +2680,19 @@ function wireStandalone(root){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
-        ytPlayer.previousVideo();
+        const list=ytPlayer.getPlaylist?.()||[];
+        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
+        if(list.length){
+          const target=Math.max(0,pi-1);
+          ytPlayer.playVideoAt(target);
+        }else{
+          ytPlayer.previousVideo();
+        }
         setIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
-      }catch(e){}
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
+      }catch(e){
+        try{ytPlayer.previousVideo();ytPlayer.playVideo()}catch(_){}
+      }
       return;
     }
 
@@ -2678,10 +2706,20 @@ function wireStandalone(root){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
-        ytPlayer.nextVideo();
+        const list=ytPlayer.getPlaylist?.()||[];
+        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
+        if(list.length){
+          let target=pi+1;
+          if(target>=list.length)target=project.options.loop?0:list.length-1;
+          ytPlayer.playVideoAt(target);
+        }else{
+          ytPlayer.nextVideo();
+        }
         setIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
-      }catch(e){}
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
+      }catch(e){
+        try{ytPlayer.nextVideo();ytPlayer.playVideo()}catch(_){}
+      }
       return;
     }
 
