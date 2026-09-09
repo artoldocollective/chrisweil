@@ -1961,19 +1961,21 @@ function wirePlayer(root,unused=false,restoreState=null){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
-        const list=ytPlayer.getPlaylist?.()||[];
-        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
-        if(list.length){
-          const target=Math.max(0,pi-1);
-          ytPlayer.playVideoAt(target);
-        }else{
-          ytPlayer.previousVideo();
-        }
+        let pi=Number(ytPlayer.getPlaylistIndex?.());
+        if(!Number.isFinite(pi) || pi<0)pi=0;
+        const target=Math.max(0,pi-1);
+
+        // Station Builder method: explicitly load the same playlist at the requested item.
+        ytPlayer.loadPlaylist({
+          list:it.playlistId,
+          listType:"playlist",
+          index:target,
+          startSeconds:0
+        });
+        try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
+        try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setPlayIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
-      }catch(e){
-        try{ytPlayer.previousVideo();ytPlayer.playVideo()}catch(_){}
-      }
+      }catch(e){}
       return;
     }
 
@@ -1987,20 +1989,27 @@ function wirePlayer(root,unused=false,restoreState=null){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
+        let pi=Number(ytPlayer.getPlaylistIndex?.());
+        if(!Number.isFinite(pi) || pi<0)pi=0;
         const list=ytPlayer.getPlaylist?.()||[];
-        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
-        if(list.length){
-          let target=pi+1;
-          if(target>=list.length)target=project.options.loop?0:list.length-1;
-          ytPlayer.playVideoAt(target);
-        }else{
-          ytPlayer.nextVideo();
+        let target=pi+1;
+
+        if(list.length && target>=list.length){
+          if(project.options.loop)target=0;
+          else return;
         }
+
+        // Station Builder method: explicitly load the same playlist at the requested item.
+        ytPlayer.loadPlaylist({
+          list:it.playlistId,
+          listType:"playlist",
+          index:target,
+          startSeconds:0
+        });
+        try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
+        try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setPlayIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
-      }catch(e){
-        try{ytPlayer.nextVideo();ytPlayer.playVideo()}catch(_){}
-      }
+      }catch(e){}
       return;
     }
 
@@ -2680,19 +2689,21 @@ function wireStandalone(root){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
-        const list=ytPlayer.getPlaylist?.()||[];
-        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
-        if(list.length){
-          const target=Math.max(0,pi-1);
-          ytPlayer.playVideoAt(target);
-        }else{
-          ytPlayer.previousVideo();
-        }
+        let pi=Number(ytPlayer.getPlaylistIndex?.());
+        if(!Number.isFinite(pi) || pi<0)pi=0;
+        const target=Math.max(0,pi-1);
+
+        // Station Builder method: explicitly load the same playlist at the requested item.
+        ytPlayer.loadPlaylist({
+          list:it.playlistId,
+          listType:"playlist",
+          index:target,
+          startSeconds:0
+        });
+        try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
+        try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
-      }catch(e){
-        try{ytPlayer.previousVideo();ytPlayer.playVideo()}catch(_){}
-      }
+      }catch(e){}
       return;
     }
 
@@ -2706,20 +2717,27 @@ function wireStandalone(root){
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
     if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
+        let pi=Number(ytPlayer.getPlaylistIndex?.());
+        if(!Number.isFinite(pi) || pi<0)pi=0;
         const list=ytPlayer.getPlaylist?.()||[];
-        const pi=Number(ytPlayer.getPlaylistIndex?.()??0);
-        if(list.length){
-          let target=pi+1;
-          if(target>=list.length)target=project.options.loop?0:list.length-1;
-          ytPlayer.playVideoAt(target);
-        }else{
-          ytPlayer.nextVideo();
+        let target=pi+1;
+
+        if(list.length && target>=list.length){
+          if(project.options.loop)target=0;
+          else return;
         }
+
+        // Station Builder method: explicitly load the same playlist at the requested item.
+        ytPlayer.loadPlaylist({
+          list:it.playlistId,
+          listType:"playlist",
+          index:target,
+          startSeconds:0
+        });
+        try{ytPlayer.setLoop(!!project.options.loop)}catch(_){}
+        try{ytPlayer.setShuffle(!!project.options.shuffle)}catch(_){}
         setIcon(true);
-        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},120);
-      }catch(e){
-        try{ytPlayer.nextVideo();ytPlayer.playVideo()}catch(_){}
-      }
+      }catch(e){}
       return;
     }
 
