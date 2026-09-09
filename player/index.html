@@ -1665,13 +1665,17 @@ function wirePlayer(root,unused=false,restoreState=null){
         targetId=holder.id;
       }
 
-      const setAudioCoverFromCurrentVideo=()=>{
+      let lastAudioYTThumbVideoId="";
+    const setAudioCoverFromCurrentVideo=()=>{
       if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
-      if(it.thumb||project.defaultThumb)return;
+      // A YouTube PLAYLIST must follow the thumbnail of each current video.
+      // Do not freeze the playlist on the item's/default cover.
+      if(!it.playlistId && (it.thumb||project.defaultThumb))return;
       try{
         const data=ytPlayer.getVideoData?.();
         const id=data?.video_id||"";
-        if(!id)return;
+        if(!id || id===lastAudioYTThumbVideoId)return;
+        lastAudioYTThumbVideoId=id;
         cover.onerror=()=>{cover.onerror=null;cover.src="https://img.youtube.com/vi/"+id+"/hqdefault.jpg"};
         cover.src="https://img.youtube.com/vi/"+id+"/maxresdefault.jpg";
       }catch(e){}
@@ -1991,6 +1995,7 @@ function wirePlayer(root,unused=false,restoreState=null){
         const target=Math.max(0,pi-1);
 
         // Station Builder method: explicitly load the same playlist at the requested item.
+        lastAudioYTThumbVideoId="";
         ytPlayer.loadPlaylist({
           list:it.playlistId,
           listType:"playlist",
@@ -2026,6 +2031,7 @@ function wirePlayer(root,unused=false,restoreState=null){
         }
 
         // Station Builder method: explicitly load the same playlist at the requested item.
+        lastAudioYTThumbVideoId="";
         ytPlayer.loadPlaylist({
           list:it.playlistId,
           listType:"playlist",
@@ -2427,13 +2433,17 @@ function wireStandalone(root){
         targetId=holder.id;
       }
 
-      const setAudioCoverFromCurrentVideo=()=>{
+      let lastAudioYTThumbVideoId="";
+    const setAudioCoverFromCurrentVideo=()=>{
       if(project.mode!=="audio" || !cover || cover.tagName!=="IMG")return;
-      if(it.thumb||project.defaultThumb)return;
+      // A YouTube PLAYLIST must follow the thumbnail of each current video.
+      // Do not freeze the playlist on the item's/default cover.
+      if(!it.playlistId && (it.thumb||project.defaultThumb))return;
       try{
         const data=ytPlayer.getVideoData?.();
         const id=data?.video_id||"";
-        if(!id)return;
+        if(!id || id===lastAudioYTThumbVideoId)return;
+        lastAudioYTThumbVideoId=id;
         cover.onerror=()=>{cover.onerror=null;cover.src="https://img.youtube.com/vi/"+id+"/hqdefault.jpg"};
         cover.src="https://img.youtube.com/vi/"+id+"/maxresdefault.jpg";
       }catch(e){}
@@ -2746,6 +2756,7 @@ function wireStandalone(root){
         const target=Math.max(0,pi-1);
 
         // Station Builder method: explicitly load the same playlist at the requested item.
+        lastAudioYTThumbVideoId="";
         ytPlayer.loadPlaylist({
           list:it.playlistId,
           listType:"playlist",
@@ -2781,6 +2792,7 @@ function wireStandalone(root){
         }
 
         // Station Builder method: explicitly load the same playlist at the requested item.
+        lastAudioYTThumbVideoId="";
         ytPlayer.loadPlaylist({
           list:it.playlistId,
           listType:"playlist",
