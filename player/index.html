@@ -1956,10 +1956,35 @@ function wirePlayer(root,unused=false,restoreState=null){
   };
 
   root.querySelector("[data-prev]")?.addEventListener("click",()=>{
+    const it=arr[idx];
+
+    // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
+    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+      try{
+        ytPlayer.previousVideo();
+        setPlayIcon(true);
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
+      }catch(e){}
+      return;
+    }
+
     load(idx-1,true);
     if(project.mode==="video")setPlayIcon(true);
   });
+
   root.querySelector("[data-next]")?.addEventListener("click",()=>{
+    const it=arr[idx];
+
+    // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
+    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+      try{
+        ytPlayer.nextVideo();
+        setPlayIcon(true);
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
+      }catch(e){}
+      return;
+    }
+
     load(nextIndex(),true);
     if(project.mode==="video")setPlayIcon(true);
   });
@@ -2631,10 +2656,35 @@ function wireStandalone(root){
   };
 
   root.querySelector("[data-prev]")?.addEventListener("click",()=>{
+    const it=arr[idx];
+
+    // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
+    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+      try{
+        ytPlayer.previousVideo();
+        setIcon(true);
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
+      }catch(e){}
+      return;
+    }
+
     load(idx-1,true);
     if(project.mode==="video")setIcon(true);
   });
+
   root.querySelector("[data-next]")?.addEventListener("click",()=>{
+    const it=arr[idx];
+
+    // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
+    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+      try{
+        ytPlayer.nextVideo();
+        setIcon(true);
+        setTimeout(()=>{try{ytPlayer.playVideo()}catch(e){}},80);
+      }catch(e){}
+      return;
+    }
+
     load(nextIndex(),true);
     if(project.mode==="video")setIcon(true);
   });
