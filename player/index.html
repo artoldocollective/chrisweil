@@ -1959,7 +1959,7 @@ function wirePlayer(root,unused=false,restoreState=null){
     const it=arr[idx];
 
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
-    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+    if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
         ytPlayer.previousVideo();
         setPlayIcon(true);
@@ -1976,7 +1976,7 @@ function wirePlayer(root,unused=false,restoreState=null){
     const it=arr[idx];
 
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
-    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+    if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
         ytPlayer.nextVideo();
         setPlayIcon(true);
@@ -2659,7 +2659,7 @@ function wireStandalone(root){
     const it=arr[idx];
 
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
-    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+    if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
         ytPlayer.previousVideo();
         setIcon(true);
@@ -2676,7 +2676,7 @@ function wireStandalone(root){
     const it=arr[idx];
 
     // A YouTube playlist uses Previous/Next INSIDE the YouTube playlist.
-    if(project.mode==="video" && it?.type==="youtube" && it.playlistId && ytPlayer){
+    if(it?.type==="youtube" && it.playlistId && ytPlayer){
       try{
         ytPlayer.nextVideo();
         setIcon(true);
