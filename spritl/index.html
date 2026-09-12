@@ -1,3 +1,4 @@
+<!-- Version: 1.2.3 | Last Update: 2026-09-012 | Author: RedMagicBlue Indie Game Studio | © All rights reserved -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -578,51 +579,50 @@ document.addEventListener('wheel', e=>{
 
 </script>
 <script>
-document.addEventListener('touchstart', function (e) {
-  if (e.touches.length > 1) {
-    e.preventDefault();
-  }
-}, { passive: false });
+(function() {
 
-let lastTouchEnd = 0;
-
-document.addEventListener('touchend', function (e) {
-  const now = Date.now();
-
-  if (now - lastTouchEnd <= 300) {
-    e.preventDefault();
-  }
-
-  lastTouchEnd = now;
-}, { passive: false });
-</script>
-<script>
-(function () {
   const style = document.createElement('style');
 
   style.textContent = `
-    button, a, [role="button"],
-    [onclick], .button, .btn {
+    html, body {
+      touch-action: manipulation !important;
+      -webkit-text-size-adjust: 100% !important;
+    }
+
+    button, a, [role="button"], [onclick], .button, .btn {
       touch-action: manipulation !important;
       -webkit-user-select: none !important;
       user-select: none !important;
+      -webkit-touch-callout: none !important;
     }
   `;
 
   document.head.appendChild(style);
 
+  document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('gesturechange', function(e) {
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('gestureend', function(e) {
+    e.preventDefault();
+  }, { passive: false });
+
   let lastTouchEnd = 0;
 
-  document.addEventListener('touchend', function (e) {
+  document.addEventListener('touchend', function(e) {
     const now = Date.now();
 
     if (now - lastTouchEnd < 500) {
       e.preventDefault();
-      e.stopPropagation();
     }
 
     lastTouchEnd = now;
   }, { passive: false });
+
 })();
 </script>
 </body>
