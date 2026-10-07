@@ -104,6 +104,7 @@ video{width:100%;height:100%;object-fit:cover;display:block}
   <div class="manual">
     <input id="isbnInput" placeholder="ENTER ISBN-10 / ISBN-13">
     <button class="btn" id="inspect">INSPECT</button>
+    <button class="btn" id="test">TEST ISBN</button>
   </div>
   <div class="status" id="scanStatus">READY — POINT CAMERA AT BOOK BARCODE</div>
 </section>
@@ -114,6 +115,7 @@ video{width:100%;height:100%;object-fit:cover;display:block}
     <div class="kicker">Object status</div>
     <div class="bigisbn" id="isbnDisplay">NO ISBN</div>
     <div id="summary">Awaiting identification.</div>
+    <div id="diagnostic" class="meta"></div>
     <div id="book"></div>
     <div class="sources" id="sources"></div>
     <div id="consensus"></div>
@@ -191,7 +193,9 @@ const REGIONS=[
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function normalizeISBN(raw){
- let s=(raw||'').toUpperCase().replace(/[^0-9X]/g,'');
+ let s=(raw||'').toUpperCase()
+   .replace(/[OoQ]/g,'0').replace(/[Il|]/g,'1').replace(/[Ss]/g,'5')
+   .replace(/[^0-9X]/g,'');
  if(s.length===13 && /^97[89]/.test(s) && check13(s)) return s;
  if(s.length===10 && check10(s)) return to13(s);
  return null;
@@ -273,7 +277,7 @@ async function ocrLoop(){
     ctx.drawImage(video,sx,sy,sw,sh,0,0,c.width,c.height);
     const {data}=await ocrWorker.recognize(c);
     const text=data.text||'';
-    const matches=text.toUpperCase().match(/(?:ISBN(?:-1[03])?[\s:]*)?(97[89][\s-]?(?:\d[\s-]?){10}\d|\d[\s-]?(?:\d[\s-]?){8}[\dX])/g)||[];
+    const matches=text.toUpperCase().match(/(?:ISBN(?:-1[03])?[\s:]*)?(97[89](?:[\s-]?\d){10}|\d(?:[\s-]?\d){8}[\dX])/g)||[];
     for(const m of matches){const isbn=normalizeISBN(m);if(isbn){acceptCandidate(isbn,'OCR');break}}
    }catch{}
    ocrBusy=false;
@@ -283,11 +287,12 @@ async function ocrLoop(){
 }
 function acceptCandidate(isbn,method){
  if(isbn===lastCandidate)confirmations++;else{lastCandidate=isbn;confirmations=1}
- scanStatus.textContent=`${method} CANDIDATE: ${isbn} / CONFIRMATION ${Math.min(confirmations,2)}/2`;
- if(confirmations>=2){inspectISBN(isbn);confirmations=0}
+ scanStatus.textContent=`${method} CANDIDATE: ${isbn} / ${confirmations>=2?'CONFIRMED':'CONFIRMING...'}`;
+ if(method==='BARCODE' || confirmations>=2){inspectISBN(isbn);confirmations=0}
 }
 $('inspect').onclick=()=>{const isbn=normalizeISBN($('isbnInput').value);if(isbn)inspectISBN(isbn);else scanStatus.textContent='INVALID ISBN — CHECK NUMBER';}
 $('isbnInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('inspect').click()});
+$('test').onclick=()=>{ $('isbnInput').value='9780140328721'; $('inspect').click(); };
 
 async function inspectISBN(isbn){
  $('isbnDisplay').textContent=isbn;
@@ -307,9 +312,10 @@ async function inspectISBN(isbn){
  if(valid.length){
    renderBook(merge(valid),valid);
  }else{
-   $('summary').innerHTML='<span class="badge warn">NO DIRECT RECORD</span> The ISBN was valid, but none of the browser-queryable sources returned a record.';
+   $('summary').innerHTML='<span class="badge warn">NO DIRECT RECORD</span> The ISBN passed checksum validation, but no direct endpoint returned a record. Use the source links below — and check the browser/network status shown in each row.';
  }
  scanStatus.textContent='INSPECTION COMPLETE — '+valid.length+' DIRECT RECORD(S) / '+links.length+' SEARCH LINKS';
+ $('diagnostic').textContent='Direct queries: '+valid.length+' found. If this remains 0 for a known ISBN, the browser is blocking one or more external requests (CORS/network), not the ISBN itself.';
 }
 function linkFor(id,isbn){
  const map={google:googleUrl,bnf:bnfUrl,dnb:dnbUrl,crossref:()=>`https://search.crossref.org/?q=${encodeURIComponent(isbn)}`,archive:()=>`https://archive.org/advancedsearch.php?q=${encodeURIComponent('isbn:'+isbn)}&fl[]=identifier,title,creator,year&output=json`,wikidata:()=>`https://www.wikidata.org/w/index.php?search=${encodeURIComponent(isbn)}`,sbn:sbnUrl,worldcat:worldcatUrl,amazon:amazonUrl,trove:()=>`https://trove.nla.gov.au/search/category/books?keyword=${encodeURIComponent(isbn)}`,bne:()=>`https://catalogo.bne.es/discovery/search?query=any,contains,${encodeURIComponent(isbn)}`,loc:()=>`https://www.loc.gov/books/?q=${encodeURIComponent(isbn)}`,open:()=>`https://openlibrary.org/isbn/${encodeURIComponent(isbn)}`};
@@ -317,20 +323,54 @@ function linkFor(id,isbn){
 }
 async function queryOpen(isbn){
  try{
-  const u='https://openlibrary.org/api/books?bibkeys=ISBN:'+isbn+'&jscmd=data&format=json';
-  const j=await fetch(u).then(r=>r.json()),d=j['ISBN:'+isbn];
+  let d=null;
+  try{
+   const j=await fetch('https://openlibrary.org/isbn/'+isbn+'.json').then(r=>r.ok?r.json():null);
+   if(j)d=j;
+  }catch{}
+  if(!d){
+   const j=await fetch('https://openlibrary.org/api/books?bibkeys=ISBN:'+isbn+'&jscmd=data&format=json').then(r=>r.ok?r.json():null);
+   d=j?.['ISBN:'+isbn]||null;
+  }
   if(!d)return null;
-  return {source:'OPEN LIBRARY',title:d.title,authors:(d.authors||[]).map(a=>a.name).join(', '),publisher:(d.publishers||[]).map(p=>p.name).join(', '),date:d.publish_date,pages:d.number_of_pages,cover:d.cover?.medium||d.cover?.large,url:d.url||linkFor('open',isbn),note:'Edition record'};
+  const publishers=d.publishers||[];
+  const authors=d.authors||d.by_statement?[]:[];
+  return {
+   source:'OPEN LIBRARY',
+   title:d.title,
+   authors:authors.map(a=>a.name||a.key).join(', '),
+   publisher:publishers.map(p=>p.name||p).join(', '),
+   date:d.publish_date,
+   pages:d.number_of_pages||d.number_of_pages_median,
+   cover:d.cover?.medium||d.cover?.large||d.covers?.[0]&&('https://covers.openlibrary.org/b/id/'+d.covers[0]+'-M.jpg'),
+   url:d.url||linkFor('open',isbn),
+   note:'Edition record'
+  };
  }catch{return null}
 }
 async function queryGoogle(isbn){
  try{
-  const j=await fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:'+isbn+'&maxResults=10').then(r=>r.json());
-  const item=(j.items||[]).find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=>i.identifier===isbn))||(j.items||[])[0];
+  const candidates=[isbn];
+  if(isbn.startsWith('978')||isbn.startsWith('979')) candidates.push(toISBN10(isbn));
+  let item=null;
+  for(const id of candidates){
+   try{
+    const j=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('isbn:'+id)+'&maxResults=10').then(r=>r.ok?r.json():null);
+    item=(j?.items||[]).find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=>i.identifier.replace(/-/g,'')===id))||(j?.items||[])[0];
+    if(item)break;
+   }catch{}
+  }
   if(!item)return null;
   const v=item.volumeInfo||{};
   return {source:'GOOGLE BOOKS',title:[v.title,v.subtitle].filter(Boolean).join(': '),authors:(v.authors||[]).join(', '),publisher:v.publisher,date:v.publishedDate,pages:v.pageCount,cover:v.imageLinks?.thumbnail?.replace('http:','https:'),url:v.infoLink||googleUrl(isbn),note:'Volume record'};
  }catch{return null}
+}
+function toISBN10(isbn13){
+ if(!/^97[89]\d{10}$/.test(isbn13))return null;
+ const core=isbn13.slice(3,12); let sum=0;
+ for(let i=0;i<9;i++)sum+=(10-i)*+core[i];
+ const r=(11-sum%11)%11;
+ return core+(r===10?'X':r);
 }
 async function queryBnF(isbn){
  try{
