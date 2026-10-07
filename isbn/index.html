@@ -2,738 +2,133 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sacrisoft ISBN Inspector</title>
-
-<!-- Google Material Icons -->
-<link
-  href="https://fonts.googleapis.com/icon?family=Material+Icons"
-  rel="stylesheet"
->
-
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: #fff;
-  color: #111;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-#app {
-  max-width: 820px;
-  margin: auto;
-  padding: 22px;
-}
-
-/* SACRISOFT RAINBOW */
-
-.rainbow {
-  height: 8px;
-  background:
-    linear-gradient(
-      90deg,
-      #ed1c24 0% 16.66%,
-      #f7941d 16.66% 33.33%,
-      #ffdd00 33.33% 50%,
-      #39b54a 50% 66.66%,
-      #00aeef 66.66% 83.33%,
-      #8e44ad 83.33% 100%
-    );
-}
-
-/* HEADER */
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  border-bottom: 3px solid #111;
-
-  padding: 14px 0;
-}
-
-.brand {
-  font-weight: 900;
-  font-size: 24px;
-  letter-spacing: -0.05em;
-}
-
-.code {
-  margin-top: 4px;
-
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 700;
-
-  letter-spacing: .12em;
-}
-
-.material-icons {
-  font-family: "Material Icons";
-
-  font-weight: normal;
-  font-style: normal;
-
-  font-size: 25px;
-  line-height: 1;
-
-  letter-spacing: normal;
-  text-transform: none;
-
-  display: inline-block;
-
-  white-space: nowrap;
-  word-wrap: normal;
-
-  direction: ltr;
-
-  -webkit-font-feature-settings: "liga";
-  -webkit-font-smoothing: antialiased;
-}
-
-/* SCANNER */
-
-.scanner {
-  position: relative;
-
-  margin-top: 22px;
-
-  border: 2px solid #111;
-
-  background: #111;
-
-  overflow: hidden;
-
-  min-height: 390px;
-}
-
-.scanner.off {
-  background: #f7f7f7;
-}
-
-video {
-  display: block;
-
-  width: 100%;
-  height: 390px;
-
-  object-fit: cover;
-
-  background: #111;
-}
-
-.scanner.off video {
-  display: none;
-}
-
-/* CAMERA PLACEHOLDER */
-
-.placeholder {
-  min-height: 390px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
-}
-
-.scanner:not(.off) .placeholder {
-  display: none;
-}
-
-/* SCANNER CORNERS */
-
-.corner {
-  position: absolute;
-
-  width: 34px;
-  height: 34px;
-
-  border-color: #fff;
-
-  z-index: 2;
-}
-
-.c1 {
-  left: 22px;
-  top: 22px;
-
-  border-left: 3px solid;
-  border-top: 3px solid;
-}
-
-.c2 {
-  right: 22px;
-  top: 22px;
-
-  border-right: 3px solid;
-  border-top: 3px solid;
-}
-
-.c3 {
-  left: 22px;
-  bottom: 22px;
-
-  border-left: 3px solid;
-  border-bottom: 3px solid;
-}
-
-.c4 {
-  right: 22px;
-  bottom: 22px;
-
-  border-right: 3px solid;
-  border-bottom: 3px solid;
-}
-
-/* SCAN LINE */
-
-.scanline {
-  position: absolute;
-
-  left: 12%;
-  right: 12%;
-  top: 50%;
-
-  height: 2px;
-
-  background: #fff;
-
-  z-index: 3;
-
-  pointer-events: none;
-}
-
-/* CONTROLS */
-
-.controls {
-  display: flex;
-
-  gap: 9px;
-
-  flex-wrap: wrap;
-
-  margin-top: 12px;
-}
-
-button,
-input {
-  min-height: 48px;
-
-  border: 2px solid #111;
-
-  background: #fff;
-  color: #111;
-
-  padding: 10px 14px;
-
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-button {
-  cursor: pointer;
-
-  display: inline-flex;
-
-  align-items: center;
-
-  gap: 7px;
-}
-
-button.primary {
-  background: #111;
-  color: #fff;
-}
-
-button:hover {
-  background: #eee;
-}
-
-button.primary:hover {
-  background: #333;
-}
-
-input {
-  flex: 1;
-
-  min-width: 220px;
-
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-/* STATUS */
-
-.status {
-  margin-top: 9px;
-
-  min-height: 16px;
-
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  font-size: 11px;
-}
-
-/* INSPECTION REPORT */
-
-.report {
-  display: none;
-
-  border-top: 3px solid #111;
-
-  margin-top: 24px;
-
-  padding-top: 16px;
-}
-
-.report.show {
-  display: block;
-}
-
-.eyebrow {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  font-size: 10px;
-  font-weight: 900;
-
-  letter-spacing: .14em;
-}
-
-/* BOOK */
-
-.book {
-  display: grid;
-
-  grid-template-columns: 145px 1fr;
-
-  gap: 20px;
-
-  margin-top: 12px;
-}
-
-.cover {
-  width: 145px;
-  height: 205px;
-
-  background: #111;
-  color: #fff;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
-
-  overflow: hidden;
-}
-
-.cover img {
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-}
-
-.title {
-  font-size: 27px;
-
-  line-height: 1;
-
-  letter-spacing: -.045em;
-
-  font-weight: 900;
-}
-
-.author {
-  margin-top: 7px;
-
-  font-weight: 700;
-}
-
-/* METADATA */
-
-dl {
-  display: grid;
-
-  grid-template-columns: 95px 1fr;
-
-  gap: 6px 12px;
-
-  margin-top: 18px;
-
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  font-size: 11px;
-}
-
-dt {
-  font-weight: 900;
-}
-
-dd {
-  margin: 0;
-}
-
-/* ISBN */
-
-.isbn {
-  border-top: 1px solid #111;
-
-  margin-top: 17px;
-
-  padding-top: 12px;
-
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  font-size: 17px;
-  font-weight: 900;
-}
-
-/* DECORATIVE BARCODE */
-
-.bars {
-  height: 55px;
-
-  margin-top: 14px;
-
-  border: 1px solid #111;
-
-  background:
-    repeating-linear-gradient(
-      90deg,
-      #111 0 2px,
-      #fff 2px 4px,
-      #111 4px 5px,
-      #fff 5px 9px,
-      #111 9px 12px,
-      #fff 12px 15px
-    );
-}
-
-/* FOOTER */
-
-.meta {
-  display: flex;
-
-  justify-content: space-between;
-
-  gap: 10px;
-
-  margin-top: 10px;
-
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  font-size: 9px;
-
-  letter-spacing: .07em;
-}
-
-/* MOBILE */
-
-@media (max-width: 560px) {
-
-  #app {
-    padding: 14px;
-  }
-
-  .book {
-    grid-template-columns: 1fr;
-  }
-
-  .cover {
-    width: 125px;
-    height: 175px;
-  }
-
-  .title {
-    font-size: 23px;
-  }
-
-  .scanner,
-  video,
-  .placeholder {
-    min-height: 300px;
-    height: 300px;
-  }
-
-  dl {
-    grid-template-columns: 1fr;
-  }
-
-  .meta {
-    flex-direction: column;
-  }
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
+#app{max-width:820px;margin:auto;padding:22px}
+.rainbow{height:8px;background:linear-gradient(90deg,#ed1c24 0 16.66%,#f7941d 16.66% 33.33%,#ffdd00 33.33% 50%,#39b54a 50% 66.66%,#00aeef 66.66% 83.33%,#8e44ad 83.33% 100%)}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #111;padding:14px 0}
+.brand{font-weight:900;font-size:24px;letter-spacing:-.05em}
+.code{font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;margin-top:4px}
+.material-icons{font-family:"Material Icons";font-size:25px;vertical-align:middle}
+.scanner{position:relative;margin-top:22px;border:2px solid #111;background:#111;overflow:hidden;min-height:390px}
+.scanner.off{background:#f7f7f7}
+video{display:block;width:100%;height:390px;object-fit:cover;background:#111}
+.scanner.off video{display:none}
+.placeholder{min-height:390px;display:flex;align-items:center;justify-content:center;text-align:center}
+.scanner:not(.off) .placeholder{display:none}
+.corner{position:absolute;width:34px;height:34px;border-color:#fff;z-index:3}
+.c1{left:22px;top:22px;border-left:3px solid;border-top:3px solid}
+.c2{right:22px;top:22px;border-right:3px solid;border-top:3px solid}
+.c3{left:22px;bottom:22px;border-left:3px solid;border-bottom:3px solid}
+.c4{right:22px;bottom:22px;border-right:3px solid;border-bottom:3px solid}
+.scanline{position:absolute;left:12%;right:12%;top:50%;height:2px;background:#fff;z-index:4;pointer-events:none}
+.scan-label{position:absolute;left:50%;top:50%;transform:translate(-50%,22px);z-index:4;background:#111;color:#fff;padding:4px 8px;font:10px ui-monospace,monospace;letter-spacing:.08em;white-space:nowrap}
+.scanner.off .scan-label,.scanner.off .scanline,.scanner.off .corner{display:none}
+.controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+button,input{min-height:48px;border:2px solid #111;background:#fff;color:#111;padding:10px 14px;font:700 13px Arial}
+button{cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+button.primary{background:#111;color:#fff}
+button:hover{background:#eee}
+button.primary:hover{background:#333}
+input{flex:1;min-width:220px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.status{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:9px;min-height:16px}
+.engines{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.engine{border:1px solid #111;padding:4px 7px;font:9px ui-monospace,monospace}
+.engine.on{background:#111;color:#fff}
+.report{display:none;border-top:3px solid #111;margin-top:24px;padding-top:16px}
+.report.show{display:block}
+.eyebrow{font:900 10px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em}
+.book{display:grid;grid-template-columns:145px 1fr;gap:20px;margin-top:12px}
+.cover{width:145px;height:205px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover}
+.title{font-size:27px;line-height:1;letter-spacing:-.045em;font-weight:900}
+.author{margin-top:7px;font-weight:700}
+dl{display:grid;grid-template-columns:95px 1fr;gap:6px 12px;margin-top:18px;font:11px ui-monospace,SFMono-Regular,Menlo,monospace}
+dt{font-weight:900}dd{margin:0}
+.isbn{border-top:1px solid #111;margin-top:17px;padding-top:12px;font:900 17px ui-monospace,SFMono-Regular,Menlo,monospace}
+.bars{height:55px;margin-top:14px;border:1px solid #111;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 9px,#111 9px 12px,#fff 12px 15px)}
+.meta{display:flex;justify-content:space-between;gap:10px;margin-top:10px;font:9px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.07em}
+.ocr-note{margin-top:8px;font:10px ui-monospace,monospace;color:#555}
+@media(max-width:560px){
+#app{padding:14px}.book{grid-template-columns:1fr}.cover{width:125px;height:175px}.title{font-size:23px}
+.scanner,video,.placeholder{min-height:300px;height:300px}dl{grid-template-columns:1fr}.meta{flex-direction:column}
 }
 </style>
 </head>
-
-
 <body>
-
 <div id="app">
-
-  <div class="rainbow"></div>
-
-  <header>
-
-    <div>
-      <div class="brand">
-        SACRISOFT®
-      </div>
-
-      <div class="code">
-        ISBN INSPECTOR / 001
-      </div>
-    </div>
-
-    <span class="material-icons">
-      menu_book
-    </span>
-
-  </header>
-
-
-  <!-- CAMERA -->
-
-  <section
-    class="scanner off"
-    id="scanner"
-    aria-label="ISBN camera scanner"
-  >
-
-    <video
-      id="video"
-      playsinline
-      muted
-    ></video>
-
-
-    <div class="placeholder">
-
-      <div>
-
-        <span
-          class="material-icons"
-          style="font-size:64px"
-        >
-          qr_code_scanner
-        </span>
-
-        <div
-          style="
-            font-weight:900;
-            letter-spacing:.08em;
-            margin-top:8px;
-          "
-        >
-          READY TO INSPECT
-        </div>
-
-        <div
-          style="
-            font:11px ui-monospace,monospace;
-            margin-top:7px;
-          "
-        >
-          POINT CAMERA AT BOOK BARCODE
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="corner c1"></div>
-    <div class="corner c2"></div>
-    <div class="corner c3"></div>
-    <div class="corner c4"></div>
-
-    <div class="scanline"></div>
-
-  </section>
-
-
-  <!-- CONTROLS -->
-
-  <div class="controls">
-
-    <button
-      class="primary"
-      id="camera"
-      type="button"
-    >
-      <span class="material-icons">
-        photo_camera
-      </span>
-
-      SCAN ISBN
-    </button>
-
-
-    <button
-      id="stop"
-      type="button"
-    >
-      <span class="material-icons">
-        stop
-      </span>
-
-      STOP
-    </button>
-
-
-    <input
-      id="isbn"
-      inputmode="numeric"
-      autocomplete="off"
-      placeholder="or enter ISBN manually"
-      aria-label="ISBN"
-    >
-
-
-    <button
-      id="inspect"
-      type="button"
-    >
-      <span class="material-icons">
-        search
-      </span>
-
-      INSPECT
-    </button>
-
-  </div>
-
-
-  <div
-    class="status"
-    id="status"
-    aria-live="polite"
-  >
-    CAMERA STANDBY
-  </div>
-
-
-  <!-- RESULT -->
-
-  <section
-    class="report"
-    id="report"
-  >
-
-    <div class="eyebrow">
-      INSPECTION REPORT / IDENTIFIED EDITION
-    </div>
-
-
-    <div class="book">
-
-
-      <div
-        class="cover"
-        id="cover"
-      >
-
-        <span
-          class="material-icons"
-          style="font-size:45px"
-        >
-          auto_stories
-        </span>
-
-      </div>
-
-
-      <div>
-
-        <div
-          class="title"
-          id="title"
-        >
-          THE BOOK HAS BEEN FOUND
-        </div>
-
-
-        <div
-          class="author"
-          id="author"
-        >
-          —
-        </div>
-
-
-        <dl>
-
-          <dt>PUBLISHER</dt>
-          <dd id="publisher">—</dd>
-
-
-          <dt>YEAR</dt>
-          <dd id="year">—</dd>
-
-
-          <dt>EDITION</dt>
-          <dd id="edition">—</dd>
-
-
-          <dt>LANGUAGE</dt>
-          <dd id="language">—</dd>
-
-
-          <dt>PAGES</dt>
-          <dd id="pages">—</dd>
-
-        </dl>
-
-      </div>
-
-    </div>
-
-
-    <div class="isbn">
-
-      ISBN
-      <span id="isbnOut">
-        —
-      </span>
-
-    </div>
-
-
-    <div
-      class="bars"
-      aria-hidden="true"
-    ></div>
-
-
-    <div class="meta">
-
-      <span>
-        OBJECT STATUS: IDENTIFIED
-      </span>
-
-      <span>
-        SACRISOFT BIBLIOGRAPHIC UNIT
-      </span>
-
-    </div>
-
-  </section>
-
+<div class="rainbow"></div>
+<header>
+<div><div class="brand">SACRISOFT®</div><div class="code">ISBN INSPECTOR / 002</div></div>
+<span class="material-icons">menu_book</span>
+</header>
+
+<section class="scanner off" id="scanner" aria-label="ISBN camera scanner">
+<video id="video" playsinline muted></video>
+<div class="placeholder">
+<div>
+<span class="material-icons" style="font-size:64px">qr_code_scanner</span>
+<div style="font-weight:900;letter-spacing:.08em;margin-top:8px">READY TO INSPECT</div>
+<div style="font:11px ui-monospace,monospace;margin-top:7px">POINT CAMERA AT BARCODE OR ISBN TEXT</div>
+</div>
+</div>
+<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+<div class="scanline"></div>
+<div class="scan-label">EAN-13 / ISBN TEXT</div>
+</section>
+
+<div class="controls">
+<button class="primary" id="camera" type="button"><span class="material-icons">photo_camera</span>SCAN ISBN</button>
+<button id="stop" type="button"><span class="material-icons">stop</span>STOP</button>
+<input id="isbn" inputmode="numeric" autocomplete="off" placeholder="or enter ISBN manually" aria-label="ISBN">
+<button id="inspect" type="button"><span class="material-icons">search</span>INSPECT</button>
 </div>
 
+<div class="status" id="status" aria-live="polite">CAMERA STANDBY</div>
+<div class="engines">
+<span class="engine" id="zxingState">ZXING BARCODE: OFF</span>
+<span class="engine" id="ocrState">OCR: OFF</span>
+</div>
+<div class="ocr-note">Barcode detection runs continuously. OCR activates as a fallback and reads the ISBN printed above the barcode.</div>
+
+<section class="report" id="report">
+<div class="eyebrow">INSPECTION REPORT / IDENTIFIED EDITION</div>
+<div class="book">
+<div class="cover" id="cover"><span class="material-icons" style="font-size:45px">auto_stories</span></div>
+<div>
+<div class="title" id="title">THE BOOK HAS BEEN FOUND</div>
+<div class="author" id="author">—</div>
+<dl>
+<dt>PUBLISHER</dt><dd id="publisher">—</dd>
+<dt>YEAR</dt><dd id="year">—</dd>
+<dt>EDITION</dt><dd id="edition">—</dd>
+<dt>LANGUAGE</dt><dd id="language">—</dd>
+<dt>PAGES</dt><dd id="pages">—</dd>
+</dl>
+</div>
+</div>
+<div class="isbn">ISBN <span id="isbnOut">—</span></div>
+<div class="bars"></div>
+<div class="meta"><span>OBJECT STATUS: IDENTIFIED</span><span>SACRISOFT BIBLIOGRAPHIC UNIT</span></div>
+</section>
+</div>
 
 <script>
+/*
+  Sacrisoft ISBN Inspector 002
+
+  Scanner stack:
+  1. ZXing browser reader for EAN-13 / ISBN barcodes.
+  2. Tesseract.js OCR fallback for printed ISBN text.
+  3. ISBN checksum validation.
+  4. Open Library edition lookup.
+
+  External libraries are loaded only when SCAN ISBN is pressed.
+*/
 
 const $ = id => document.getElementById(id);
 
@@ -743,109 +138,101 @@ const status = $("status");
 const input = $("isbn");
 
 let stream = null;
-let detector = null;
+let zxingReader = null;
+let zxingControls = null;
+let ocrWorker = null;
 let running = false;
-let lastScan = "";
+let ocrTimer = null;
+let lastAccepted = "";
+let candidate = "";
+let candidateCount = 0;
 
 
 /* -----------------------------
-   ISBN CLEANING
+   ISBN
 ----------------------------- */
 
 function clean(value) {
-
   return (value || "")
-    .replace(/[\s-]/g, "")
+    .replace(/[\s\-–—]/g, "")
+    .replace(/[^0-9X]/gi, "")
     .toUpperCase();
-
 }
-
-
-/* -----------------------------
-   ISBN VALIDATION
------------------------------ */
 
 function validISBN(value) {
 
-  /*
-   ISBN-13
-  */
+  value = clean(value);
 
   if (/^\d{13}$/.test(value)) {
 
     let sum = 0;
 
     for (let i = 0; i < 13; i++) {
-
-      sum +=
-        Number(value[i]) *
-        (i % 2 ? 3 : 1);
-
+      sum += Number(value[i]) * (i % 2 ? 3 : 1);
     }
 
     return sum % 10 === 0;
-
   }
-
-
-  /*
-   ISBN-10
-  */
 
   if (/^\d{9}[\dX]$/.test(value)) {
 
     let sum = 0;
 
     for (let i = 0; i < 10; i++) {
-
       sum +=
-        (value[i] === "X"
-          ? 10
-          : Number(value[i])) *
+        (value[i] === "X" ? 10 : Number(value[i])) *
         (10 - i);
-
     }
 
     return sum % 11 === 0;
-
   }
-
 
   return false;
-
 }
 
 
-/* -----------------------------
-   STOP CAMERA
------------------------------ */
+/*
+  Convert ISBN-10 to ISBN-13.
+*/
 
-function stopCamera() {
+function isbn10to13(value) {
 
-  running = false;
+  value = clean(value);
 
-  if (stream) {
-
-    stream
-      .getTracks()
-      .forEach(track => track.stop());
-
-    stream = null;
-
+  if (!/^\d{9}[\dX]$/.test(value)) {
+    return value;
   }
 
-  video.srcObject = null;
+  const base = "978" + value.slice(0, 9);
 
-  scanner.classList.add("off");
+  let sum = 0;
 
-  status.textContent =
-    "CAMERA STANDBY";
+  for (let i = 0; i < 12; i++) {
+    sum += Number(base[i]) * (i % 2 ? 3 : 1);
+  }
 
+  const check = (10 - (sum % 10)) % 10;
+
+  return base + check;
 }
 
 
 /* -----------------------------
-   START CAMERA
+   STATUS
+----------------------------- */
+
+function setEngine(id, text, active) {
+
+  const el = $(id);
+
+  el.textContent = text;
+
+  el.classList.toggle("on", !!active);
+}
+
+
+/* -----------------------------
+   CAMERA
 ----------------------------- */
 
 async function startCamera() {
@@ -856,25 +243,27 @@ async function startCamera() {
       "CAMERA NOT SUPPORTED — USE MANUAL ISBN";
 
     return;
-
   }
-
 
   try {
 
-    stream =
-      await navigator.mediaDevices.getUserMedia({
-
-        video: {
-          facingMode: {
-            ideal: "environment"
-          }
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: {
+          ideal: "environment"
         },
 
-        audio: false
+        width: {
+          ideal: 1280
+        },
 
-      });
+        height: {
+          ideal: 720
+        }
+      },
 
+      audio: false
+    });
 
     video.srcObject = stream;
 
@@ -885,37 +274,9 @@ async function startCamera() {
     running = true;
 
     status.textContent =
-      "SCANNING — POINT AT THE ISBN BARCODE";
+      "SCANNING — BARCODE + OCR ACTIVE";
 
-
-    /*
-      Native BarcodeDetector.
-      Chrome/Edge support this on
-      supported platforms.
-    */
-
-    if ("BarcodeDetector" in window) {
-
-      detector =
-        new BarcodeDetector({
-
-          formats: [
-            "ean_13",
-            "ean_8",
-            "code_128",
-            "upc_a"
-          ]
-
-        });
-
-      scanLoop();
-
-    } else {
-
-      status.textContent =
-        "LIVE CAMERA READY — THIS BROWSER LACKS BARCODE DETECTION; USE MANUAL ISBN";
-
-    }
+    loadZXing();
 
   }
 
@@ -924,44 +285,299 @@ async function startCamera() {
     console.error(error);
 
     status.textContent =
-      "CAMERA ACCESS DENIED OR UNAVAILABLE — USE MANUAL ISBN";
+      "CAMERA ACCESS DENIED — USE MANUAL ISBN";
 
   }
-
 }
 
 
 /* -----------------------------
-   BARCODE SCAN LOOP
+   ZXING
 ----------------------------- */
 
-async function scanLoop() {
-
-  if (!running || !detector) {
-    return;
-  }
-
+async function loadZXing() {
 
   try {
 
-    const codes =
-      await detector.detect(video);
+    setEngine(
+      "zxingState",
+      "ZXING BARCODE: LOADING…",
+      false
+    );
+
+    const ZXingBrowser =
+      await import(
+        "https://cdn.jsdelivr.net/npm/@zxing/browser@0.2.1/+esm"
+      );
+
+    if (!running) return;
+
+    zxingReader =
+      new ZXingBrowser.BrowserMultiFormatReader();
+
+    setEngine(
+      "zxingState",
+      "ZXING BARCODE: ACTIVE",
+      true
+    );
+
+    zxingControls =
+      await zxingReader.decodeFromVideoElement(
+        video,
+        result => {
+
+          if (!running || !result) {
+            return;
+          }
+
+          const raw =
+            clean(result.getText());
+
+          /*
+            EAN-13 is normally the ISBN representation.
+          */
+
+          if (validISBN(raw)) {
+
+            acceptCandidate(
+              raw,
+              "BARCODE"
+            );
+
+          }
+
+        }
+      );
+
+    loadOCR();
+
+  }
+
+  catch (error) {
+
+    console.error("ZXing:", error);
+
+    setEngine(
+      "zxingState",
+      "ZXING BARCODE: UNAVAILABLE",
+      false
+    );
+
+    /*
+      OCR still starts.
+    */
+
+    loadOCR();
+  }
+}
 
 
-    if (codes.length) {
+/* -----------------------------
+   OCR
+----------------------------- */
 
-      const raw =
-        clean(codes[0].rawValue);
+async function loadOCR() {
+
+  try {
+
+    setEngine(
+      "ocrState",
+      "OCR: LOADING…",
+      false
+    );
+
+    const Tesseract =
+      await import(
+        "https://cdn.jsdelivr.net/npm/tesseract.js@7/+esm"
+      );
+
+    if (!running) return;
+
+    ocrWorker =
+      await Tesseract.createWorker(
+        "eng",
+        1,
+        {
+          logger: message => {
+
+            if (
+              message.status ===
+              "recognizing text"
+            ) {
+
+              const pct =
+                Math.round(
+                  (message.progress || 0) * 100
+                );
+
+              status.textContent =
+                "OCR READING ISBN… " + pct + "%";
+            }
+
+          }
+        }
+      );
+
+    setEngine(
+      "ocrState",
+      "OCR: ACTIVE",
+      true
+    );
+
+    /*
+      OCR every 1.8 seconds.
+      This is deliberately not continuous
+      at 30fps because OCR is expensive.
+    */
+
+    scheduleOCR();
+
+  }
+
+  catch (error) {
+
+    console.error("OCR:", error);
+
+    setEngine(
+      "ocrState",
+      "OCR: UNAVAILABLE",
+      false
+    );
+
+    status.textContent =
+      "BARCODE ACTIVE — OCR UNAVAILABLE";
+
+  }
+}
 
 
-      if (raw !== lastScan) {
+function scheduleOCR() {
 
-        lastScan = raw;
+  if (!running || !ocrWorker) {
+    return;
+  }
 
-        input.value = raw;
+  clearTimeout(ocrTimer);
 
-        inspect(raw);
+  ocrTimer =
+    setTimeout(
+      performOCR,
+      1800
+    );
+}
 
+
+async function performOCR() {
+
+  if (!running || !ocrWorker) {
+    return;
+  }
+
+  try {
+
+    /*
+      Crop the central portion where the
+      printed ISBN normally appears.
+    */
+
+    const canvas =
+      document.createElement("canvas");
+
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+
+    if (!vw || !vh) {
+      scheduleOCR();
+      return;
+    }
+
+    /*
+      Use a wide horizontal crop.
+      ISBN text is usually close to the
+      EAN barcode.
+    */
+
+    const cropX = Math.floor(vw * 0.08);
+    const cropY = Math.floor(vh * 0.42);
+    const cropW = Math.floor(vw * 0.84);
+    const cropH = Math.floor(vh * 0.38);
+
+    canvas.width = cropW;
+    canvas.height = cropH;
+
+    const ctx =
+      canvas.getContext("2d", {
+        willReadFrequently: true
+      });
+
+    ctx.drawImage(
+      video,
+      cropX,
+      cropY,
+      cropW,
+      cropH,
+      0,
+      0,
+      cropW,
+      cropH
+    );
+
+
+    /*
+      Upscale the crop for OCR.
+    */
+
+    const scale = 1.5;
+
+    const enlarged =
+      document.createElement("canvas");
+
+    enlarged.width =
+      Math.floor(cropW * scale);
+
+    enlarged.height =
+      Math.floor(cropH * scale);
+
+    const ectx =
+      enlarged.getContext("2d");
+
+    ectx.drawImage(
+      canvas,
+      0,
+      0,
+      enlarged.width,
+      enlarged.height
+    );
+
+
+    status.textContent =
+      "OCR READING ISBN…";
+
+
+    const result =
+      await ocrWorker.recognize(
+        enlarged
+      );
+
+    if (!running) return;
+
+    const text =
+      result.data.text || "";
+
+    const candidates =
+      extractISBNCandidates(text);
+
+
+    for (const isbn of candidates) {
+
+      if (validISBN(isbn)) {
+
+        acceptCandidate(
+          isbn,
+          "OCR"
+        );
+
+        break;
       }
 
     }
@@ -970,26 +586,303 @@ async function scanLoop() {
 
   catch (error) {
 
-    /*
-      Detection failures are ignored
-      so the scanner can continue.
-    */
+    console.warn(
+      "OCR frame failed:",
+      error
+    );
 
   }
 
+  scheduleOCR();
+}
 
-  requestAnimationFrame(scanLoop);
+
+/* -----------------------------
+   OCR ISBN EXTRACTION
+----------------------------- */
+
+function extractISBNCandidates(text) {
+
+  const candidates = [];
+
+  /*
+    Normalize common OCR mistakes.
+  */
+
+  let t =
+    text
+      .replace(/[Oo]/g, "0")
+      .replace(/[Il|]/g, "1")
+      .replace(/[Ss]/g, "5")
+      .replace(/[Bb]/g, "8");
+
+
+  /*
+    First look for explicit ISBN labels.
+  */
+
+  const labeled =
+    t.match(
+      /ISBN(?:-1[03])?[^0-9X]{0,12}([0-9X][0-9X\s\-]{8,20})/gi
+    );
+
+  if (labeled) {
+
+    for (const match of labeled) {
+
+      const digits =
+        clean(match);
+
+      if (
+        /^\d{13}$/.test(digits) ||
+        /^\d{9}[\dX]$/.test(digits)
+      ) {
+
+        candidates.push(
+          digits
+        );
+      }
+    }
+  }
+
+
+  /*
+    Then search all 13-digit sequences.
+  */
+
+  const thirteen =
+    t.match(/\d[\d\s\-]{11,18}\d/g) || [];
+
+  for (const value of thirteen) {
+
+    const digits =
+      clean(value);
+
+    if (
+      digits.length === 13 ||
+      digits.length === 10
+    ) {
+
+      candidates.push(
+        digits
+      );
+    }
+  }
+
+
+  /*
+    Raw compact ISBN.
+  */
+
+  const raw =
+    t.match(/\b(?:97[89]\d{10}|\d{9}[\dX])\b/gi);
+
+  if (raw) {
+    candidates.push(
+      ...raw.map(clean)
+    );
+  }
+
+
+  return [
+    ...new Set(candidates)
+  ];
 
 }
 
 
 /* -----------------------------
-   INSPECT ISBN
+   TWO-READ CONFIRMATION
 ----------------------------- */
 
-async function inspect(raw = input.value) {
+function acceptCandidate(
+  raw,
+  source
+) {
 
-  const isbn = clean(raw);
+  let isbn =
+    clean(raw);
+
+  if (!validISBN(isbn)) {
+    return;
+  }
+
+  /*
+    Normalize ISBN-10.
+  */
+
+  if (isbn.length === 10) {
+    isbn = isbn10to13(isbn);
+  }
+
+
+  /*
+    Barcode can be UPC-A.
+    We only accept it if it is already
+    a valid ISBN.
+  */
+
+  if (
+    candidate === isbn
+  ) {
+
+    candidateCount++;
+
+  }
+
+  else {
+
+    candidate = isbn;
+    candidateCount = 1;
+
+  }
+
+
+  status.textContent =
+    source +
+    " DETECTED — CONFIRMING ISBN (" +
+    candidateCount +
+    "/2)";
+
+
+  /*
+    Require two matching reads.
+    Barcode is fast; OCR can be noisy.
+  */
+
+  if (candidateCount >= 2) {
+
+    if (isbn === lastAccepted) {
+      return;
+    }
+
+    lastAccepted = isbn;
+
+    input.value = isbn;
+
+    status.textContent =
+      source +
+      " CONFIRMED — INSPECTING " +
+      isbn;
+
+    inspect(isbn);
+
+  }
+
+}
+
+
+/* -----------------------------
+   STOP EVERYTHING
+----------------------------- */
+
+async function stopCamera() {
+
+  running = false;
+
+  clearTimeout(ocrTimer);
+
+  /*
+    Stop ZXing.
+  */
+
+  try {
+
+    if (zxingControls) {
+
+      zxingControls.stop();
+
+      zxingControls = null;
+
+    }
+
+  }
+
+  catch (e) {}
+
+
+  try {
+
+    if (zxingReader) {
+
+      zxingReader.reset();
+
+      zxingReader = null;
+
+    }
+
+  }
+
+  catch (e) {}
+
+
+  /*
+    Stop OCR worker.
+  */
+
+  try {
+
+    if (ocrWorker) {
+
+      await ocrWorker.terminate();
+
+      ocrWorker = null;
+
+    }
+
+  }
+
+  catch (e) {}
+
+
+  /*
+    Stop camera.
+  */
+
+  if (stream) {
+
+    stream
+      .getTracks()
+      .forEach(
+        track => track.stop()
+      );
+
+    stream = null;
+
+  }
+
+  video.srcObject = null;
+
+  scanner.classList.add("off");
+
+  setEngine(
+    "zxingState",
+    "ZXING BARCODE: OFF",
+    false
+  );
+
+  setEngine(
+    "ocrState",
+    "OCR: OFF",
+    false
+  );
+
+  status.textContent =
+    "CAMERA STANDBY";
+
+}
+
+
+/* -----------------------------
+   OPEN LIBRARY
+----------------------------- */
+
+async function inspect(
+  raw = input.value
+) {
+
+  const isbn =
+    clean(raw);
 
 
   if (!validISBN(isbn)) {
@@ -997,10 +890,11 @@ async function inspect(raw = input.value) {
     status.textContent =
       "INVALID ISBN — PLEASE CHECK THE NUMBER";
 
-    $("report").classList.remove("show");
+    $("report")
+      .classList
+      .remove("show");
 
     return;
-
   }
 
 
@@ -1009,10 +903,6 @@ async function inspect(raw = input.value) {
 
 
   try {
-
-    /*
-      Open Library Books API
-    */
 
     const response =
       await fetch(
@@ -1025,7 +915,9 @@ async function inspect(raw = input.value) {
 
 
     if (!response.ok) {
-      throw new Error("API error");
+      throw new Error(
+        "Open Library request failed"
+      );
     }
 
 
@@ -1037,56 +929,51 @@ async function inspect(raw = input.value) {
       data["ISBN:" + isbn];
 
 
-    /*
-      ISBN is valid but database
-      has no matching record.
-    */
-
     if (!book) {
-
-      status.textContent =
-        "ISBN VALID — NO MATCH FOUND IN OPEN LIBRARY";
 
       fillFallback(isbn);
 
-      $("report").classList.add("show");
+      $("report")
+        .classList
+        .add("show");
+
+      status.textContent =
+        "ISBN VALID — NO MATCH FOUND IN OPEN LIBRARY";
 
       return;
 
     }
 
 
-    /* TITLE */
-
     $("title").textContent =
-      book.title || "Untitled";
+      book.title ||
+      "Untitled";
 
-
-    /* AUTHORS */
 
     $("author").textContent =
       (book.authors || [])
-        .map(author => author.name)
+        .map(
+          author => author.name
+        )
         .join(", ")
-      || "Unknown author";
+      ||
+      "Unknown author";
 
-
-    /* PUBLISHER */
 
     $("publisher").textContent =
       (book.publishers || [])
-        .map(publisher => publisher.name)
+        .map(
+          publisher => publisher.name
+        )
         .join(", ")
-      || "—";
+      ||
+      "—";
 
-
-    /* DATE */
 
     $("year").textContent =
-      book.publish_date || "—";
+      book.publish_date ||
+      "—";
 
-
-    /* EDITION */
 
     const isbn13 =
       book.identifiers?.isbn_13?.[0];
@@ -1098,32 +985,27 @@ async function inspect(raw = input.value) {
         : "Edition record";
 
 
-    /* LANGUAGE */
-
     $("language").textContent =
       (book.languages || [])
-        .map(language =>
-          language.key
-            ?.split("/")
-            .pop()
+        .map(
+          language =>
+            language.key
+              ?.split("/")
+              .pop()
         )
         .join(", ")
-      || "—";
+      ||
+      "—";
 
-
-    /* PAGES */
 
     $("pages").textContent =
-      book.number_of_pages || "—";
+      book.number_of_pages ||
+      "—";
 
-
-    /* ISBN */
 
     $("isbnOut").textContent =
       isbn;
 
-
-    /* COVER */
 
     const cover =
       book.cover?.medium ||
@@ -1136,7 +1018,10 @@ async function inspect(raw = input.value) {
       $("cover").innerHTML =
         `
         <img
-          src="${cover.replaceAll('"', "&quot;")}"
+          src="${cover.replaceAll(
+            '"',
+            "&quot;"
+          )}"
           alt="Book cover"
         >
         `;
@@ -1158,14 +1043,15 @@ async function inspect(raw = input.value) {
     }
 
 
-    $("report").classList.add("show");
+    $("report")
+      .classList
+      .add("show");
 
 
     status.textContent =
       "INSPECTION COMPLETE — EDITION IDENTIFIED";
 
   }
-
 
   catch (error) {
 
@@ -1188,10 +1074,8 @@ function fillFallback(isbn) {
   $("title").textContent =
     "ISBN IDENTIFIED";
 
-
   $("author").textContent =
     "No bibliographic record returned";
-
 
   $("publisher").textContent = "—";
   $("year").textContent = "—";
@@ -1201,7 +1085,6 @@ function fillFallback(isbn) {
 
   $("isbnOut").textContent =
     isbn;
-
 
   $("cover").innerHTML =
     `
@@ -1246,23 +1129,38 @@ input.addEventListener(
   event => {
 
     if (event.key === "Enter") {
-
       inspect();
-
     }
 
   }
 );
 
 
-/* Stop camera when page closes */
-
 window.addEventListener(
   "beforeunload",
-  stopCamera
+  () => {
+
+    /*
+      beforeunload cannot reliably await
+      OCR termination, but camera tracks
+      are stopped synchronously here.
+    */
+
+    running = false;
+
+    if (stream) {
+
+      stream
+        .getTracks()
+        .forEach(
+          track => track.stop()
+        );
+
+    }
+
+  }
 );
 
 </script>
-
 </body>
 </html>
