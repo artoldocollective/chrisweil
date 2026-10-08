@@ -106,6 +106,14 @@ a{color:#ff5000}
 /* BLACK STOP BUTTON */
 #stop{background:#111!important;color:#fff!important;border-color:#111!important;}
 #stop:hover:not(:disabled){background:#111!important;color:#fff!important;border-color:#111!important;}
+
+/* Country-aware fallback highlighting */
+.institution-card.preferred-country{outline:2px solid #111;box-shadow:inset 0 0 0 2px #111;background:#f5f5f5}
+.institution-card.preferred-country .institution-region{font-weight:900}
+.institution-card.preferred-country:before{content:'RECOMMENDED';display:block;font-size:9px;font-weight:900;letter-spacing:.08em;margin-bottom:6px}
+.platform-priority{font-weight:900;background:#f5f5f5}
+.platform-priority .source-msg:before{content:'PRIORITY';font-weight:900;margin-right:8px}
+@media(max-width:480px){.institution-card.preferred-country:before{font-size:8px}}
 </style>
 
 <style id="source-results-fix">
@@ -572,15 +580,22 @@ const REGIONS=[
  ['USA',['Library of Congress','https://www.loc.gov/books/']],
 ];
 
-function renderInstitutions(){
+function renderInstitutions(preferredCountry=''){
  const grid=document.getElementById('institutionsGrid');
  if(!grid)return;
- grid.innerHTML=REGIONS.map(r=>{
+ const pref=String(preferredCountry||'').toUpperCase();
+ const sorted=[...REGIONS].sort((a,b)=>{
+   const ap=a[0].toUpperCase()===pref, bp=b[0].toUpperCase()===pref;
+   if(ap&&!bp)return -1; if(!ap&&bp)return 1;
+   return a[0].localeCompare(b[0]);
+ });
+ grid.innerHTML=sorted.map(r=>{
    const region=esc(r[0]);
+   const preferred=r[0].toUpperCase()===pref;
    const links=r.slice(1);
-   return `<div class="institution-card">
+   return `<div class="institution-card${preferred?' preferred-country':''}">
      <div class="institution-region">${region}</div>
-     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(i?'↗ '+x[0]:x[0])}</a>`).join('')}
+     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(i?'OPEN ↗︎':x[0])}</a>`).join('')}
    </div>`;
  }).join('');
 }
@@ -693,11 +708,13 @@ function renderGlobal(){
 
 
 
-function showInstitutions(){
+function showInstitutions(preferredCountry=''){
  const panel=document.getElementById('institutionsPanel');
+ const details=document.getElementById('institutionsDetails');
  if(!panel)return;
  panel.classList.remove('hidden');
- renderInstitutions();
+ renderInstitutions(preferredCountry);
+ if(details) details.open=true;
 }
 
 async function loadZXing(){
@@ -894,7 +911,49 @@ async function discoveryPhase(isbn){
  return [a,b,c].filter(Boolean);
 }
 
-function renderCommercialDiscovery(isbn){
+function localeHint(isbn, record=null){
+ const lang=String(record?.language||'').toLowerCase().split(/[-_]/)[0];
+ const byLang={it:'ITALY',fr:'FRANCE',de:'GERMANY',es:'SPAIN',sv:'SWEDEN',fi:'FINLAND',nl:'NETHERLANDS',da:'DENMARK',no:'NORWAY',pl:'POLAND',cs:'CZECHIA',pt:'PORTUGAL',el:'GREECE',ja:'JAPAN',ko:'SOUTH KOREA',zh:'CHINA',en:'UK / IRELAND'};
+ if(byLang[lang])return byLang[lang];
+ if(/^9780|^9781/.test(isbn))return 'UK / IRELAND';
+ if(/^9782/.test(isbn))return 'FRANCE';
+ if(/^9783/.test(isbn))return 'GERMANY';
+ if(/^9784/.test(isbn))return 'JAPAN';
+ if(/^9785/.test(isbn))return 'RUSSIA';
+ if(/^9787/.test(isbn))return 'CHINA';
+ if(/^97880/.test(isbn))return 'CZECHIA';
+ if(/^97881|^97893/.test(isbn))return 'INDIA';
+ if(/^97882/.test(isbn))return 'NORWAY';
+ if(/^97883/.test(isbn))return 'POLAND';
+ if(/^97884/.test(isbn))return 'SPAIN';
+ if(/^97885/.test(isbn))return 'BRAZIL';
+ if(/^97887/.test(isbn))return 'DENMARK';
+ if(/^97888/.test(isbn))return 'ITALY';
+ if(/^97889/.test(isbn))return 'SOUTH KOREA';
+ if(/^97890|^97894/.test(isbn))return 'NETHERLANDS';
+ if(/^97891/.test(isbn))return 'SWEDEN';
+ return '';
+}
+const RETAIL_BY_COUNTRY={
+ 'ITALY':['Amazon Italy','IBS','LaFeltrinelli'],
+ 'FRANCE':['Amazon France','Fnac'],
+ 'GERMANY':['Amazon Germany','Thalia','Booklooker.de'],
+ 'SPAIN':['Amazon Spain'],
+ 'UK / IRELAND':['Amazon UK','Waterstones','Blackwell’s'],
+ 'SWEDEN':['Amazon Sweden'],
+ 'FINLAND':['Amazon Finland'],
+ 'NETHERLANDS':['Amazon Netherlands','Bookshop.org'],
+ 'DENMARK':['Amazon Denmark'],
+ 'NORWAY':['Amazon Norway'],
+ 'POLAND':['Amazon Poland'],
+ 'PORTUGAL':['Amazon Spain'],
+ 'JAPAN':['Amazon Japan'],
+ 'USA':['Amazon US','Barnes & Noble'],
+ 'CANADA':['Amazon Canada']
+};
+function platformPriority(name,country){return (RETAIL_BY_COUNTRY[country]||[]).includes(name)}
+
+function renderCommercialDiscovery(isbn,preferredCountry=''){
  const platforms=[
   ['RETAIL','AbeBooks','https://www.abebooks.com/servlet/SearchResults?kn='+encodeURIComponent(isbn)],
   ['RETAIL','Alibris','https://www.alibris.com/search/books/isbn/'+encodeURIComponent(isbn)],
@@ -931,7 +990,7 @@ function renderCommercialDiscovery(isbn){
    out+=`<details class="source-group platform-group" ${group==='RETAIL'||group==='DISCOVERY'?'open':''}>
      <summary class="source-group-title">${esc(group)}</summary>
      <div class="source-group-body">
-       ${items.map(([name,url])=>`<div class="source">
+       ${items.sort((a,b)=>Number(platformPriority(b[0],preferredCountry))-Number(platformPriority(a[0],preferredCountry))).map(([name,url])=>`<div class="source${platformPriority(name,preferredCountry)?' platform-priority':''}">
          <div class="source-name">${esc(name)}</div>
          <div class="source-msg"></div>
          <div class="source-actions"><a class="source-link" target="_blank" rel="noopener" href="${esc(url)}">OPEN ↗</a></div>
@@ -947,9 +1006,10 @@ async function inspectISBN(isbn){
   const scanStatus = document.getElementById("scanStatus");
   if (scanStatus) scanStatus.textContent = "Searching databases...";
 
-  showInstitutions();
+  const initialCountry=localeHint(isbn);
+ showInstitutions(initialCountry);
  $('isbnDisplay').textContent=isbn;
- renderCommercialDiscovery(isbn);
+ renderCommercialDiscovery(isbn,initialCountry);
  $('exactNotice').textContent='EXACT ISBN PASSED TO LOOKUP: '+isbn;
  $('summary').innerHTML='<span class="badge wait">QUERYING</span>';
  $('book').innerHTML='';
@@ -967,7 +1027,11 @@ async function inspectISBN(isbn){
  const links=SOURCES.filter(s=>s.type==='link').map(s=>sourceRow(s.name,'SEARCH LINK','',linkFor(s.id,isbn)));
 
  if(valid.length){
-   renderBook(merge(valid),valid);
+   const merged=merge(valid);
+   const preferredCountry=localeHint(isbn,merged);
+   renderBook(merged,valid);
+   showInstitutions(preferredCountry);
+   renderCommercialDiscovery(isbn,preferredCountry);
    const extra=links;
    setSources(results.map((r,i)=>r?sourceRow(r.source,'FOUND',r.note||'Bibliographic record found',r.url||'',r):sourceRow(apiSources[i].name,'NO MATCH','No exact direct record',linkFor(apiSources[i].id,isbn))).concat(extra));
    scanStatus.textContent='INSPECTION COMPLETE — '+valid.length+' DIRECT RECORD(S)';
@@ -980,6 +1044,9 @@ async function inspectISBN(isbn){
 
  if(discovered.length){
    const exact=discovered.filter(x=>x.exact);
+   const preferredCountry=localeHint(isbn,discovered.find(x=>x.exact)||discovered[0]);
+   showInstitutions(preferredCountry);
+   renderCommercialDiscovery(isbn,preferredCountry);
    renderDiscovery(discovered,isbn);
    const rows=apiSources.map(s=>sourceRow(s.name,'NO MATCH','',linkFor(s.id,isbn)));
    rows.push(...discovered.map(r=>sourceRow(r.source,r.exact?'FOUND':'CANDIDATE',r.note,r.url,r)));
@@ -990,11 +1057,14 @@ async function inspectISBN(isbn){
     ? 'An exact ISBN match was found during discovery.'
     : 'The ISBN is valid but direct edition records were absent; discovery found bibliographic candidates. The ISBN was not altered.';
  }else{
-   $('summary').innerHTML='<span class="badge warn">ISBN VERIFIED / NO RECORD</span>';
-   $('book').innerHTML='<div class="meta" style="margin-top:12px">No bibliographic record returned.</div>';
-   $('consensus').innerHTML='<div class="consensus"><div class="kicker">Coverage result</div><strong>0 bibliographic records</strong></div>';
+   const preferredCountry=localeHint(isbn);
+   showInstitutions(preferredCountry);
+   renderCommercialDiscovery(isbn,preferredCountry);
+   $('summary').innerHTML='<span class="badge warn">ISBN VERIFIED / DIRECT CATALOGUE UNAVAILABLE</span>';
+   $('book').innerHTML='<div class="meta" style="margin-top:12px">The ISBN is valid, but the available national catalogue could not be queried directly. Use the highlighted local retailers first, then the highlighted national institutions.</div>';
+   $('consensus').innerHTML=`<div class="consensus"><div class="kicker">Fallback route</div><strong>${preferredCountry?'Preferred: '+esc(preferredCountry):'Use the most relevant national institution'}</strong><div class="meta">Retail and institutional links remain available without changing the scanned ISBN.</div></div>`;
    setSources(apiSources.map(s=>sourceRow(s.name,'NO MATCH','',linkFor(s.id,isbn))).concat(links));
-   scanStatus.textContent='NO BIBLIOGRAPHIC RECORDS – Please check out the platforms and libraries...';
+   scanStatus.textContent='ISBN VERIFIED — USE PRIORITY RETAIL + WORLD INSTITUTIONS';
    $('diagnostic').textContent='Important: '+isbn+' was accepted exactly. No automatic replacement or correction occurred.';
  }
 }
