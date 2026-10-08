@@ -513,6 +513,7 @@ const SOURCES=[
  {id:'bnf',name:'BnF / FRANCE',type:'api'},
  {id:'loc',name:'LIBRARY OF CONGRESS',type:'api'},
  {id:'dnb',name:'DEUTSCHE NATIONALBIBLIOTHEK',type:'api'},
+ {id:'k10plus',name:'K10PLUS / GVK',type:'api'},
  {id:'crossref',name:'CROSSREF',type:'api'},
  {id:'archive',name:'INTERNET ARCHIVE',type:'api'},
  {id:'wikidata',name:'WIKIDATA',type:'api'},
@@ -931,7 +932,7 @@ async function inspectISBN(isbn){
  setSources(apiSources.map(s=>sourceRow(s.name,'QUERYING','',linkFor(s.id,isbn))));
  const jobs=[
   queryOpen(isbn),queryGoogle(isbn),queryBnF(isbn),queryLOC(isbn),
-  queryDNB(isbn),queryCrossref(isbn),queryArchive(isbn),queryWikidata(isbn)
+  queryDNB(isbn),queryK10plus(isbn),queryCrossref(isbn),queryArchive(isbn),queryWikidata(isbn)
  ];
  const results=await Promise.all(jobs);
  const valid=results.filter(Boolean);
@@ -1066,10 +1067,9 @@ async function queryGoogle(isbn){
   const u='https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('isbn:'+isbn)+'&maxResults=10';
   const j=await fetch(u).then(r=>r.ok?r.json():null);
   const items=j?.items||[];
-  const exact=items.find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=>i.identifier.replace(/-/g,'')===isbn));
-  const item=exact||items[0];
-  if(!item)return null;
-  const v=item.volumeInfo||{};
+  const exact=items.find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=String(i.identifier||'').replace(/[\s-]/g,'')===isbn));
+  if(!exact)return null;
+  const v=exact.volumeInfo||{};
   return {
    source:'GOOGLE BOOKS',
    title:v.title,
@@ -1085,7 +1085,7 @@ async function queryGoogle(isbn){
    dimensions:[v.dimensions?.height,v.dimensions?.width,v.dimensions?.thickness].filter(Boolean).join(' × ') || '',
    cover:v.imageLinks?.extraLarge||v.imageLinks?.large||v.imageLinks?.medium||v.imageLinks?.thumbnail?.replace('http:','https:'),
    url:v.infoLink||googleUrl(isbn),
-   note:exact?'Exact ISBN match':'ISBN query result — edition match should be verified'
+   note:'Exact ISBN match'
   };
  }catch{return null}
 }
@@ -1098,54 +1098,133 @@ function toISBN10(isbn13){
 }
 async function queryBnF(isbn){
  try{
-  const q=encodeURIComponent('bib.anywhere all "'+isbn+'"');
-  const u='https://catalogue.bnf.fr/api/SRU?version=1.2&operation=searchRetrieve&query='+q+'&maximumRecords=3';
-  const xml=await fetch(u).then(r=>r.text());
-  const doc=new DOMParser().parseFromString(xml,'application/xml');
-  const rec=doc.querySelector('record');
-  if(!rec)return null;
-  const vals=[...rec.querySelectorAll('subfield')].map(x=>x.textContent.trim()).filter(Boolean);
-  const title=vals.find(x=>x.length>3);
-  return {source:'BnF / FRANCE',title:title||'BnF bibliographic record',url:bnfUrl(isbn),note:'SRU record returned'};
+  const queries=[
+   'bib.anywhere all "'+isbn+'"',
+   'bib.isbn "'+isbn+'"'
+  ];
+  for(const query of queries){
+   const u='https://catalogue.bnf.fr/api/SRU?version=1.2&operation=searchRetrieve&query='+encodeURIComponent(query)+'&maximumRecords=10';
+   const xml=await fetch(u).then(r=>r.ok?r.text():null);
+   if(!xml)continue;
+   const doc=new DOMParser().parseFromString(xml,'application/xml');
+   const recs=[...doc.querySelectorAll('record')];
+   const rec=recs.find(r=>recordContainsExactISBN(r,isbn));
+   if(!rec)continue;
+   const vals=[...rec.querySelectorAll('subfield')].map(x=>x.textContent.trim()).filter(Boolean);
+   const title=vals.find(x=>x.length>3);
+   return {source:'BnF / FRANCE',title:title||'BnF bibliographic record',url:bnfUrl(isbn),note:'Exact ISBN SRU record'};
+  }
+  return null;
  }catch{return null}
 }
 async function queryLOC(isbn){
  try{
-  const u='https://www.loc.gov/books/?q='+encodeURIComponent(isbn)+'&fo=json&c=5';
-  const j=await fetch(u).then(r=>r.json());
-  const r=(j.results||[]).find(x=>JSON.stringify(x).includes(isbn))||(j.results||[])[0];
+  const u='https://www.loc.gov/books/?q='+encodeURIComponent(isbn)+'&fo=json&c=10';
+  const j=await fetch(u).then(r=>r.ok?r.json():null);
+  const results=j?.results||[];
+  const r=results.find(x=>containsExactISBN(JSON.stringify(x),isbn));
   if(!r)return null;
-  return {source:'LIBRARY OF CONGRESS',title:r.title,authors:Array.isArray(r.contributors)?r.contributors.join(', '):r.contributor,publisher:r.date,date:r.date,url:r.id||linkFor('loc',isbn),note:'LoC JSON record'};
+  return {
+   source:'LIBRARY OF CONGRESS',
+   title:r.title,
+   authors:Array.isArray(r.contributors)?r.contributors.join(', '):r.contributor,
+   publisher:r.date,
+   date:r.date,
+   url:r.id||linkFor('loc',isbn),
+   note:'Exact ISBN LoC record'
+  };
  }catch{return null}
 }
 async function queryDNB(isbn){
  try{
-  const q=encodeURIComponent('num='+isbn);
-  const u='https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve&query='+q+'&maximumRecords=3&recordSchema=oai_dc';
-  const xml=await fetch(u).then(r=>r.text());
-  if(!/<record/i.test(xml))return null;
-  const doc=new DOMParser().parseFromString(xml,'application/xml');
-  const title=doc.querySelector('dc\\\\:title,title')?.textContent?.trim();
-  return {source:'DEUTSCHE NATIONALBIBLIOTHEK',title:title||'DNB bibliographic record',url:dnbUrl(isbn),note:'SRU record returned'};
+  const queries=['isbn='+isbn,'isb='+isbn,'num='+isbn];
+  for(const query of queries){
+   const u='https://services.dnb.de/sru/dnb?version=1.1&operation=searchRetrieve&query='+encodeURIComponent(query)+'&maximumRecords=10&recordSchema=oai_dc';
+   const xml=await fetch(u).then(r=>r.ok?r.text():null);
+   if(!xml)continue;
+   const doc=new DOMParser().parseFromString(xml,'application/xml');
+   const recs=[...doc.querySelectorAll('record')];
+   const rec=recs.find(r=>recordContainsExactISBN(r,isbn));
+   if(!rec)continue;
+   const titleNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='title');
+   const title=titleNode?.textContent?.trim()||'DNB bibliographic record';
+   return {source:'DEUTSCHE NATIONALBIBLIOTHEK',title,url:dnbUrl(isbn),note:'Exact ISBN SRU record'};
+  }
+  return null;
  }catch{return null}
 }
-
+async function queryK10plus(isbn){
+ try{
+  const endpoints=[
+   'https://sru.k10plus.de/gvk',
+   'https://sru.k10plus.de/swb'
+  ];
+  for(const endpoint of endpoints){
+   const u=endpoint+'?version=1.1&operation=searchRetrieve&query='+encodeURIComponent('pica.isb='+isbn)+'&maximumRecords=10&recordSchema=dc';
+   const xml=await fetch(u).then(r=>r.ok?r.text():null);
+   if(!xml)continue;
+   const doc=new DOMParser().parseFromString(xml,'application/xml');
+   const recs=[...doc.querySelectorAll('record')];
+   const rec=recs.find(r=>recordContainsExactISBN(r,isbn));
+   if(!rec)continue;
+   const titleNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='title');
+   const publisherNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='publisher');
+   const dateNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='date');
+   const creators=[...rec.querySelectorAll('*')].filter(n=>n.localName==='creator').map(n=>n.textContent.trim()).filter(Boolean);
+   return {
+    source:'K10PLUS / GVK',
+    title:titleNode?.textContent?.trim()||'K10plus bibliographic record',
+    authors:creators.join(', '),
+    publisher:publisherNode?.textContent?.trim(),
+    date:dateNode?.textContent?.trim(),
+    url:'https://opac.k10plus.de/',
+    note:'Exact ISBN K10plus SRU record'
+   };
+  }
+  return null;
+ }catch{return null}
+}
 async function queryCrossref(isbn){
  try{
-  const u='https://api.crossref.org/works?filter='+encodeURIComponent('isbn:'+isbn)+'&rows=5';
-  const j=await fetch(u,{headers:{'Accept':'application/json'}}).then(r=>r.json());
-  const item=(j.message?.items||[])[0];
+  const exactFetch=async(u)=>{
+   const j=await fetch(u,{headers:{'Accept':'application/json'}}).then(r=>r.ok?r.json():null);
+   const items=j?.message?.items||[];
+   return items.find(item=>containsExactISBN(JSON.stringify(item),isbn))||null;
+  };
+  let item=await exactFetch('https://api.crossref.org/works?filter='+encodeURIComponent('isbn:'+isbn)+'&rows=20');
+  if(!item){
+   item=await exactFetch('https://api.crossref.org/works?query.bibliographic='+encodeURIComponent(isbn)+'&rows=20');
+  }
   if(!item)return null;
-  return {source:'CROSSREF',title:item.title?.[0],authors:(item.author||[]).map(a=>[a.given,a.family].filter(Boolean).join(' ')).join(', '),publisher:item.publisher,date:item.published?.['date-parts']?.[0]?.join('-'),pages:item.page,description:cleanDescription(item.abstract),url:item.URL||'https://search.crossref.org/?q='+encodeURIComponent(isbn),note:'ISBN-filtered DOI metadata'};
+  return {
+   source:'CROSSREF',
+   title:item.title?.[0],
+   authors:(item.author||[]).map(a=>[a.given,a.family].filter(Boolean).join(' ')).join(', '),
+   publisher:item.publisher,
+   date:item.published?.['date-parts']?.[0]?.join('-'),
+   pages:item.page,
+   description:cleanDescription(item.abstract),
+   url:item.URL||'https://search.crossref.org/?q='+encodeURIComponent(isbn),
+   note:'Exact ISBN DOI metadata'
+  };
  }catch{return null}
 }
 async function queryArchive(isbn){
  try{
-  const u='https://archive.org/advancedsearch.php?q='+encodeURIComponent('isbn:'+isbn)+'&fl[]=identifier,title,creator,year,description&rows=10&page=1&output=json';
-  const j=await fetch(u).then(r=>r.json());
-  const d=(j.response?.docs||[])[0];
+  const u='https://archive.org/advancedsearch.php?q='+encodeURIComponent('isbn:'+isbn)+'&fl[]=identifier,title,creator,year,description,identifier&rows=20&page=1&output=json';
+  const j=await fetch(u).then(r=>r.ok?r.json():null);
+  const docs=j?.response?.docs||[];
+  const d=docs.find(x=>containsExactISBN(JSON.stringify(x),isbn));
   if(!d)return null;
-  return {source:'INTERNET ARCHIVE',title:d.title,authors:Array.isArray(d.creator)?d.creator.join(', '):d.creator,date:d.year,description:cleanDescription(d.description),url:'https://archive.org/details/'+encodeURIComponent(d.identifier),note:'Archive search record'};
+  return {
+   source:'INTERNET ARCHIVE',
+   title:d.title,
+   authors:Array.isArray(d.creator)?d.creator.join(', '):d.creator,
+   date:d.year,
+   description:cleanDescription(d.description),
+   url:'https://archive.org/details/'+encodeURIComponent(d.identifier),
+   note:'Exact ISBN Archive record'
+  };
  }catch{return null}
 }
 async function queryWikidata(isbn){
@@ -1158,10 +1237,10 @@ async function queryWikidata(isbn){
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
   } LIMIT 5`;
   const u='https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(sparql);
-  const j=await fetch(u,{headers:{'Accept':'application/sparql-results+json'}}).then(r=>r.json());
-  const b=j.results?.bindings?.[0];
+  const j=await fetch(u,{headers:{'Accept':'application/sparql-results+json'}}).then(r=>r.ok?r.json():null);
+  const b=j?.results?.bindings?.find(x=>x.item?.value);
   if(!b)return null;
-  return {source:'WIKIDATA',title:b.itemLabel?.value,authors:b.authorLabel?.value,publisher:b.publisherLabel?.value,date:b.date?.value?.slice(0,10),url:b.item?.value,note:'ISBN property match'};
+  return {source:'WIKIDATA',title:b.itemLabel?.value,authors:b.authorLabel?.value,publisher:b.publisherLabel?.value,date:b.date?.value?.slice(0,10),url:b.item?.value,note:'Exact ISBN property match'};
  }
  catch{return null}
 }
