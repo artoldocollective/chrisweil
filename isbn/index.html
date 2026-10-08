@@ -97,6 +97,7 @@ a{color:#ff5000}
 }
 
 /* SOURCE RESULT DISPLAY */
+.source-result-cover{width:34px;height:48px;object-fit:cover;flex:0 0 auto;border:1px solid rgba(0,0,0,.12);}
 .source-result{min-width:0;flex:1;}
 .source-result-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .source-result-meta{font-size:.78rem;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -527,13 +528,17 @@ const SOURCES=[
  {id:'crossref',name:'CROSSREF',type:'api'},
  {id:'archive',name:'INTERNET ARCHIVE',type:'api'},
  {id:'wikidata',name:'WIKIDATA',type:'api'},
- {id:'bne',name:'BNE / SPAIN',type:'api'},
+ {id:'libris',name:'LIBRIS / SWEDEN',type:'api'},
+ {id:'finna',name:'FINNA / FINLAND',type:'api'},
+ {id:'kb',name:'KB / NETHERLANDS',type:'api'},
+ {id:'bnb',name:'BNB / UK',type:'api'},
  {id:'sbn',name:'SBN / ITALY',type:'link'},
  {id:'worldcat',name:'WORLDCAT',type:'link'},
  {id:'amazon',name:'AMAZON / KDP',type:'link'},
  {id:'isbnsearch',name:'ISBN SEARCH',type:'link'},
  {id:'goodreads',name:'GOODREADS',type:'link'},
  {id:'trove',name:'TROVE / AUSTRALIA',type:'link'},
+ {id:'bne',name:'BNE / SPAIN',type:'link'}
 ];
 
 const REGIONS=[
@@ -604,7 +609,6 @@ function worldcatUrl(isbn){return 'https://search.worldcat.org/search?q='+encode
 function sbnUrl(isbn){return 'https://opac.sbn.it/risultati-ricerca-avanzata?query='+encodeURIComponent(isbn)}
 function dnbUrl(isbn){return 'https://portal.dnb.de/opac.htm?query='+encodeURIComponent(isbn)+'&method=simpleSearch'}
 function bnfUrl(isbn){return 'https://catalogue.bnf.fr/rechercher.do?motRecherche='+encodeURIComponent(isbn)}
-function bneUrl(isbn){return 'https://datos.bne.es/avanzada?identifier='+encodeURIComponent(isbn)}
 const SOURCE_GROUPS=[
  ['ITALY',['SBN / ITALY']],
  ['FRANCE',['BnF / FRANCE']],
@@ -612,6 +616,10 @@ const SOURCE_GROUPS=[
  ['SPAIN',['BNE / SPAIN']],
  ['UNITED STATES',['LIBRARY OF CONGRESS']],
  ['AUSTRALIA',['TROVE / AUSTRALIA']],
+ ['SWEDEN',['LIBRIS / SWEDEN']],
+ ['FINLAND',['FINNA / FINLAND']],
+ ['NETHERLANDS',['KB / NETHERLANDS']],
+ ['UK / IRELAND',['BNB / UK']],
  ['GLOBAL / BIBLIOGRAPHIC',['OPEN LIBRARY','GOOGLE BOOKS','CROSSREF','INTERNET ARCHIVE','WIKIDATA','WORLDCAT']],
  ['COMMERCIAL',['AMAZON / KDP','ISBN SEARCH']],
  ['COMMUNITY',['GOODREADS']]
@@ -634,6 +642,7 @@ function sourceRow(name,state,msg='',link='',record=null){
  const detail=[authors,publisher].filter(Boolean).join(' · ');
  return `<div class="source" data-group="${esc(group)}">
    <div class="source-name">${esc(name)}</div>
+   ${record?.cover?`<img class="source-result-cover" src="${esc(record.cover)}" alt="" loading="lazy">`:''}
    <div class="source-result">
      ${title?`<div class="source-result-title">${esc(title)}</div>`:''}
      ${detail?`<div class="source-result-meta">${esc(detail)}</div>`:''}
@@ -950,7 +959,8 @@ async function inspectISBN(isbn){
  setSources(apiSources.map(s=>sourceRow(s.name,'QUERYING','',linkFor(s.id,isbn))));
  const jobs=[
   queryOpen(isbn),queryGoogle(isbn),queryBnF(isbn),queryLOC(isbn),
-  queryDNB(isbn),queryK10plus(isbn),queryCrossref(isbn),queryArchive(isbn),queryWikidata(isbn),queryBNE(isbn)
+  queryDNB(isbn),queryK10plus(isbn),queryCrossref(isbn),queryArchive(isbn),queryWikidata(isbn),
+  queryLibris(isbn),queryFinna(isbn),queryKBNetherlands(isbn),queryBNB(isbn)
  ];
  const results=await Promise.all(jobs);
  const valid=results.filter(Boolean);
@@ -989,7 +999,7 @@ async function inspectISBN(isbn){
  }
 }
 function linkFor(id,isbn){
- const map={google:googleUrl,bnf:bnfUrl,dnb:dnbUrl,crossref:()=>`https://search.crossref.org/?q=${encodeURIComponent(isbn)}`,archive:()=>`https://archive.org/advancedsearch.php?q=${encodeURIComponent('isbn:'+isbn)}&fl[]=identifier,title,creator,year&output=json`,wikidata:()=>`https://www.wikidata.org/w/index.php?search=${encodeURIComponent(isbn)}`,sbn:sbnUrl,worldcat:worldcatUrl,amazon:()=>amazonUrl(isbn,'www.amazon.it'),isbnsearch:isbnSearchUrl,goodreads:goodreadsUrl,trove:()=>`https://trove.nla.gov.au/search/category/books?keyword=${encodeURIComponent(isbn)}`,bne:bneUrl,loc:()=>`https://www.loc.gov/books/?q=${encodeURIComponent(isbn)}`,open:()=>`https://openlibrary.org/isbn/${encodeURIComponent(isbn)}`,k10plus:()=>`https://opac.k10plus.de/`};
+ const map={google:googleUrl,bnf:bnfUrl,dnb:dnbUrl,crossref:()=>`https://search.crossref.org/?q=${encodeURIComponent(isbn)}`,archive:()=>`https://archive.org/advancedsearch.php?q=${encodeURIComponent('isbn:'+isbn)}&fl[]=identifier,title,creator,year&output=json`,wikidata:()=>`https://www.wikidata.org/w/index.php?search=${encodeURIComponent(isbn)}`,sbn:sbnUrl,worldcat:worldcatUrl,amazon:()=>amazonUrl(isbn,'www.amazon.it'),isbnsearch:isbnSearchUrl,goodreads:goodreadsUrl,trove:()=>`https://trove.nla.gov.au/search/category/books?keyword=${encodeURIComponent(isbn)}`,bne:()=>`https://catalogo.bne.es/discovery/search?query=any,contains,${encodeURIComponent(isbn)}`,loc:()=>`https://www.loc.gov/books/?q=${encodeURIComponent(isbn)}`,open:()=>`https://openlibrary.org/isbn/${encodeURIComponent(isbn)}`,k10plus:()=>`https://opac.k10plus.de/`,libris:()=>`https://libris.kb.se/search?query=${encodeURIComponent(isbn)}`,finna:()=>`https://www.finna.fi/Search/Results?lookfor=${encodeURIComponent(isbn)}&type=AllFields`,kb:()=>`https://opc-kb.oclc.org/search?query=${encodeURIComponent(isbn)}`,bnb:()=>`https://explore.bl.uk/`};
  return map[id]?map[id](isbn):'';
 }
 function cleanDescription(v){
@@ -1044,6 +1054,29 @@ function normalizeLanguages(v){
 function bestValue(rs,key){
  const vals=rs.map(r=>r[key]).filter(v=>v!==undefined&&v!==null&&v!=='');
  return vals[0]||'';
+}
+
+function containsExactISBN(text,isbn){
+ const needle=String(isbn||'').replace(/[\s-]/g,'');
+ if(!needle)return false;
+ const normalized=String(text||'').replace(/[\s-]/g,'');
+ const re=new RegExp('(?:^|[^0-9])'+needle+'(?:[^0-9]|$)');
+ return re.test(normalized);
+}
+function firstText(doc,selectors){
+ for(const sel of selectors){ const el=doc.querySelector(sel); if(el?.textContent?.trim()) return el.textContent.trim(); }
+ return '';
+}
+function firstTexts(doc,selectors){
+ for(const sel of selectors){ const vals=[...doc.querySelectorAll(sel)].map(x=>x.textContent.trim()).filter(Boolean); if(vals.length)return [...new Set(vals)]; }
+ return [];
+}
+function finnaCover(v){
+ const x=v?.images;
+ if(typeof x==='string')return x;
+ if(Array.isArray(x))return x.find(Boolean)||'';
+ if(x&&typeof x==='object')return x.large||x.medium||x.small||x.url||'';
+ return '';
 }
 
 async function queryOpen(isbn){
@@ -1127,16 +1160,9 @@ async function queryBnF(isbn){
    const doc=new DOMParser().parseFromString(xml,'application/xml');
    const rec=doc.querySelector('record');
    if(!rec)continue;
-   const field=(tag,code)=>{
-    const f=[...rec.querySelectorAll('datafield')].find(x=>x.getAttribute('tag')===tag);
-    if(!f)return '';
-    return [...f.querySelectorAll('subfield')].filter(x=>!code||x.getAttribute('code')===code).map(x=>x.textContent.trim()).filter(Boolean).join(' ');
-   };
-   const title=field('200','a')||field('245','a')||field('240','a')||'BnF bibliographic record';
-   const authors=field('700','a')||field('701','a')||field('100','a');
-   const publisher=field('210','c')||field('264','b')||field('260','b');
-   const date=field('210','d')||field('264','c')||field('260','c');
-   return {source:'BnF / FRANCE',title,authors,publisher,date,url:bnfUrl(isbn),note:'Exact ISBN SRU record'};
+   const vals=[...rec.querySelectorAll('subfield')].map(x=>x.textContent.trim()).filter(Boolean);
+   const title=vals.find(x=>x.length>3);
+   return {source:'BnF / FRANCE',title:title||'BnF bibliographic record',url:bnfUrl(isbn),note:'Exact ISBN SRU record'};
   }
   return null;
  }catch{return null}
@@ -1152,7 +1178,7 @@ async function queryLOC(isbn){
    source:'LIBRARY OF CONGRESS',
    title:r.title,
    authors:Array.isArray(r.contributors)?r.contributors.join(', '):r.contributor,
-   publisher:r.publisher||r.publication,
+   publisher:r.date,
    date:r.date,
    url:r.id||linkFor('loc',isbn),
    note:'Exact ISBN LoC record'
@@ -1251,32 +1277,6 @@ async function queryArchive(isbn){
   };
  }catch{return null}
 }
-async function queryBNE(isbn){
- try{
-  const sparql=`SELECT ?resource ?title ?author ?publisher ?date WHERE {
-    ?resource <http://datos.bne.es/def/P3013> ?id.
-    FILTER(REPLACE(REPLACE(STR(?id), "-", ""), " ", "") = "${isbn}")
-    OPTIONAL { ?resource <http://datos.bne.es/def/P3002> ?title. }
-    OPTIONAL { ?resource <http://datos.bne.es/def/P3008> ?author. }
-    OPTIONAL { ?resource <http://datos.bne.es/def/P3001> ?publisher. }
-    OPTIONAL { ?resource <http://datos.bne.es/def/P3006> ?date. }
-  } LIMIT 5`;
-  const u='https://datos.bne.es/sparql?query='+encodeURIComponent(sparql)+'&format=json';
-  const j=await fetch(u,{headers:{'Accept':'application/sparql-results+json'}}).then(r=>r.ok?r.json():null);
-  const b=j?.results?.bindings?.find(x=>x.resource?.value);
-  if(!b)return null;
-  return {
-   source:'BNE / SPAIN',
-   title:b.title?.value||'BNE bibliographic record',
-   authors:b.author?.value||'',
-   publisher:b.publisher?.value||'',
-   date:b.date?.value||'',
-   url:b.resource?.value||bneUrl(isbn),
-   note:'Exact ISBN BNE linked-data record'
-  };
- }catch{return null}
-}
-
 async function queryWikidata(isbn){
  try{
   const sparql=`SELECT ?item ?itemLabel ?authorLabel ?publisherLabel ?date WHERE {
@@ -1293,6 +1293,64 @@ async function queryWikidata(isbn){
   return {source:'WIKIDATA',title:b.itemLabel?.value,authors:b.authorLabel?.value,publisher:b.publisherLabel?.value,date:b.date?.value?.slice(0,10),url:b.item?.value,note:'Exact ISBN property match'};
  }
  catch{return null}
+}
+
+async function queryLibris(isbn){
+ try{
+  const u='https://old.libris.kb.se/xsearch?query='+encodeURIComponent('isbn:'+isbn)+'&format=mods&format_level=full&n=10';
+  const xml=await fetch(u).then(r=>r.ok?r.text():null);
+  if(!xml||!containsExactISBN(xml,isbn))return null;
+  const doc=new DOMParser().parseFromString(xml,'application/xml');
+  const title=firstText(doc,['titleInfo > title','title']);
+  const authors=firstTexts(doc,['name > namePart','name namePart']).slice(0,4).join(', ');
+  const publisher=firstText(doc,['originInfo > publisher','publisher']);
+  const date=firstText(doc,['originInfo > dateIssued','dateIssued']);
+  const id=[...doc.querySelectorAll('identifier')].find(x=>/isbn/i.test(x.getAttribute('type')||'')&&String(x.textContent).replace(/[\\s-]/g,'')===isbn);
+  const url=firstText(doc,['location > url','url']);
+  return {source:'LIBRIS / SWEDEN',title,authors,publisher,date,url:url||linkFor('libris',isbn),note:'Exact ISBN Libris Xsearch record'};
+ }catch{return null}
+}
+async function queryFinna(isbn){
+ try{
+  const u='https://api.finna.fi/v1/search?lookfor='+encodeURIComponent('"'+isbn+'"')+'&limit=10&field[]=title&field[]=authors&field[]=publishers&field[]=year&field[]=images&field[]=isbns&field[]=urls';
+  const j=await fetch(u).then(r=>r.ok?r.json():null);
+  const items=j?.records||j?.result||j?.results||[];
+  const item=items.find(x=>containsExactISBN(JSON.stringify(x),isbn));
+  if(!item)return null;
+  const authors=Array.isArray(item.authors)?item.authors.map(a=>typeof a==='string'?a:(a?.name||a?.value||'')).filter(Boolean).join(', '):String(item.authors||'');
+  const publisher=Array.isArray(item.publishers)?item.publishers.map(x=>typeof x==='string'?x:(x?.name||x?.value||'')).filter(Boolean).join(', '):String(item.publishers||item.publisher||'');
+  const cover=finnaCover(item);
+  const url=Array.isArray(item.urls)?(item.urls[0]?.url||item.urls[0]||''):String(item.url||'');
+  return {source:'FINNA / FINLAND',title:item.title,authors,publisher,date:item.year||item.publicationDate,pages:item.pages,cover,url:url||linkFor('finna',isbn),note:'Exact ISBN Finna API record'};
+ }catch{return null}
+}
+async function queryKBNetherlands(isbn){
+ try{
+  const q='isbn all "'+isbn+'"';
+  const u='https://jsru.kb.nl/sru/sru?version=1.2&operation=searchRetrieve&x-collection=GGC&query='+encodeURIComponent(q)+'&recordSchema=dcx&maximumRecords=10&x-fields=ISBN';
+  const xml=await fetch(u).then(r=>r.ok?r.text():null);
+  if(!xml||!containsExactISBN(xml,isbn))return null;
+  const doc=new DOMParser().parseFromString(xml,'application/xml');
+  const rec=doc.querySelector('recordData')||doc;
+  const title=firstText(rec,['title']);
+  const authors=firstTexts(rec,['creator','contributor']).slice(0,4).join(', ');
+  const publisher=firstText(rec,['publisher']);
+  const date=firstText(rec,['date']);
+  const identifiers=firstTexts(rec,['identifier']);
+  const url=identifiers.find(x=>/^https?:\/\/resolver\.kb\.nl\/resolve\?urn=/i.test(x))||linkFor('kb',isbn);
+  return {source:'KB / NETHERLANDS',title,authors,publisher,date,url,note:'Exact ISBN KB GGC SRU record'};
+ }catch{return null}
+}
+async function queryBNB(isbn){
+ try{
+  const prop=/^\\d{13}$/.test(isbn)?'bibo:isbn13':'bibo:isbn10';
+  const sparql=`PREFIX bibo: <http://purl.org/ontology/bibo/>\nPREFIX dct: <http://purl.org/dc/terms/>\nPREFIX blterms: <http://www.bl.uk/schemas/bibliographic/blterms#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?book ?title ?authorLabel ?publisherLabel ?date WHERE {\n ?book ${prop} "${isbn}" ; dct:title ?title .\n OPTIONAL { ?book dct:creator ?author . ?author rdfs:label ?authorLabel . }\n OPTIONAL { ?book blterms:publication ?pub . OPTIONAL { ?pub blterms:agent ?publisher . } OPTIONAL { ?pub rdfs:label ?pubLabel . } OPTIONAL { ?pub <http://purl.org/NET/c4dm/event.owl#agent> ?eventAgent . } OPTIONAL { ?pub <http://purl.org/NET/c4dm/event.owl#time> ?time . ?time rdfs:label ?date . } }\n OPTIONAL { ?pub blterms:agent ?publisher2 . ?publisher2 rdfs:label ?publisherLabel . }\n} LIMIT 10`;
+  const u='https://bnb.data.bl.uk/sparql?query='+encodeURIComponent(sparql)+'&output=json';
+  const j=await fetch(u,{headers:{'Accept':'application/sparql-results+json,application/json'}}).then(r=>r.ok?r.json():null);
+  const b=j?.results?.bindings?.[0];
+  if(!b)return null;
+  return {source:'BNB / UK',title:b.title?.value,authors:b.authorLabel?.value,publisher:b.publisherLabel?.value,date:b.date?.value,url:b.book?.value||linkFor('bnb',isbn),note:'Exact ISBN British National Bibliography record'};
+ }catch{return null}
 }
 
 function renderDiscovery(rs,isbn){
