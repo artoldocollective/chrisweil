@@ -95,6 +95,16 @@ a{color:#ff5000}
  .source-actions{min-width:auto;gap:10px}
  .source-link{font-size:9px}
 }
+
+/* SOURCE RESULT DISPLAY */
+.source-result{min-width:0;flex:1;}
+.source-result-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.source-result-meta{font-size:.78rem;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.source-msg{font-size:.72rem;opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* BLACK STOP BUTTON */
+#stop{background:#111!important;color:#fff!important;border-color:#111!important;}
+#stop:hover:not(:disabled){background:#111!important;color:#fff!important;border-color:#111!important;}
 </style>
 
 <style id="source-results-fix">
@@ -613,12 +623,20 @@ function sourceGroup(name){
   if(/DISCOVERY|CANDIDATE/i.test(name)) return 'DISCOVERY';
   return 'OTHER';
 }
-function sourceRow(name,state,msg='',link=''){
+function sourceRow(name,state,msg='',link='',record=null){
  const isResult=!!link&&(state==='FOUND'||state==='CANDIDATE'||state==='EXACT');
  if(!isResult)return '';
  const group=sourceGroup(name);
+ const title=record?.title||'';
+ const authors=record?.authors||'';
+ const publisher=record?.publisher||'';
+ const detail=[authors,publisher].filter(Boolean).join(' · ');
  return `<div class="source" data-group="${esc(group)}">
    <div class="source-name">${esc(name)}</div>
+   <div class="source-result">
+     ${title?`<div class="source-result-title">${esc(title)}</div>`:''}
+     ${detail?`<div class="source-result-meta">${esc(detail)}</div>`:''}
+   </div>
    <div class="source-msg">${esc(msg||'')}</div>
    <div class="source-actions">
      <a class="source-link" target="_blank" rel="noopener" href="${esc(link)}">VIEW ↗</a>
@@ -940,7 +958,7 @@ async function inspectISBN(isbn){
  if(valid.length){
    renderBook(merge(valid),valid);
    const extra=links;
-   setSources(results.map((r,i)=>r?sourceRow(r.source,'FOUND',r.note||'Bibliographic record found',r.url||''):sourceRow(apiSources[i].name,'NO MATCH','No exact direct record',linkFor(apiSources[i].id,isbn))).concat(extra));
+   setSources(results.map((r,i)=>r?sourceRow(r.source,'FOUND',r.note||'Bibliographic record found',r.url||'',r):sourceRow(apiSources[i].name,'NO MATCH','No exact direct record',linkFor(apiSources[i].id,isbn))).concat(extra));
    scanStatus.textContent='INSPECTION COMPLETE — '+valid.length+' DIRECT RECORD(S)';
    $('diagnostic').textContent='Exact/direct records found. The accepted ISBN is '+isbn+'.';
    return;
@@ -953,7 +971,7 @@ async function inspectISBN(isbn){
    const exact=discovered.filter(x=>x.exact);
    renderDiscovery(discovered,isbn);
    const rows=apiSources.map(s=>sourceRow(s.name,'NO MATCH','',linkFor(s.id,isbn)));
-   rows.push(...discovered.map(r=>sourceRow(r.source,r.exact?'FOUND':'CANDIDATE',r.note,r.url)));
+   rows.push(...discovered.map(r=>sourceRow(r.source,r.exact?'FOUND':'CANDIDATE',r.note,r.url,r)));
    rows.push(...links);
    setSources(rows);
    scanStatus.textContent='DISCOVERY COMPLETE — '+discovered.length+' POSSIBLE RECORD(S)';
@@ -1133,6 +1151,11 @@ async function queryLOC(isbn){
   };
  }catch{return null}
 }
+function marcField(record,tag,code){
+ const f=[...record.querySelectorAll('datafield')].find(x=>x.getAttribute('tag')===tag);
+ if(!f)return '';
+ return [...f.querySelectorAll('subfield')].filter(x=>!code||x.getAttribute('code')===code).map(x=>x.textContent.trim()).filter(Boolean).join(' ');
+}
 async function queryDNB(isbn){
  try{
   const queries=[
@@ -1146,9 +1169,11 @@ async function queryDNB(isbn){
    const doc=new DOMParser().parseFromString(xml,'application/xml');
    const rec=doc.querySelector('record');
    if(!rec)continue;
-   const titleNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='title');
-   const title=titleNode?.textContent?.trim()||'DNB bibliographic record';
-   return {source:'DEUTSCHE NATIONALBIBLIOTHEK',title,url:dnbUrl(isbn),note:'Exact ISBN SRU record'};
+   const title=marcField(rec,'245','a')||marcField(rec,'240','a')||'DNB bibliographic record';
+   const authors=marcField(rec,'100','a')||marcField(rec,'700','a');
+   const publisher=marcField(rec,'264','b')||marcField(rec,'260','b');
+   const date=marcField(rec,'264','c')||marcField(rec,'260','c');
+   return {source:'DEUTSCHE NATIONALBIBLIOTHEK',title,authors,publisher,date,url:dnbUrl(isbn),note:'Exact ISBN SRU record'};
   }
   return null;
  }catch{return null}
@@ -1166,16 +1191,13 @@ async function queryK10plus(isbn){
    const doc=new DOMParser().parseFromString(xml,'application/xml');
    const rec=doc.querySelector('record');
    if(!rec)continue;
-   const titleNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='title');
-   const publisherNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='publisher');
-   const dateNode=[...rec.querySelectorAll('*')].find(n=>n.localName==='date');
-   const creators=[...rec.querySelectorAll('*')].filter(n=>n.localName==='creator').map(n=>n.textContent.trim()).filter(Boolean);
+   const title=marcField(rec,'245','a')||marcField(rec,'240','a')||'K10plus bibliographic record';
+   const authors=marcField(rec,'100','a')||marcField(rec,'700','a');
+   const publisher=marcField(rec,'264','b')||marcField(rec,'260','b');
+   const date=marcField(rec,'264','c')||marcField(rec,'260','c');
    return {
     source:'K10PLUS / GVK',
-    title:titleNode?.textContent?.trim()||'K10plus bibliographic record',
-    authors:creators.join(', '),
-    publisher:publisherNode?.textContent?.trim(),
-    date:dateNode?.textContent?.trim(),
+    title,authors,publisher,date,
     url:'https://opac.k10plus.de/',
     note:'Exact ISBN K10plus SRU record'
    };
