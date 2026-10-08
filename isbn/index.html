@@ -419,15 +419,17 @@ a{color:#ff5000}
 </style>
 
 
-<style id="stop-button-black">
-#stop{
-  background:#111!important;
-  color:#fff!important;
-  border-color:#111!important;
+<style id="institutions-arrow-fix">
+.institution-link.secondary{
+  white-space:nowrap;
+  font-family:monospace;
 }
-#stop:hover:not(:disabled){
-  background:#111!important;
-  color:#fff!important;
+</style>
+
+
+<style id="isbn-input-mobile-zoom-fix">
+#isbnInput{
+  font-size:16px!important;
 }
 </style>
 
@@ -563,7 +565,7 @@ function renderInstitutions(){
    const links=r.slice(1);
    return `<div class="institution-card">
      <div class="institution-region">${region}</div>
-     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x)}" target="_blank" rel="noopener">${esc(i===0?x:'OPEN ↗')}</a>`).join('')}
+     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x)}" target="_blank" rel="noopener">${esc(i===0?x:'↗ '+x)}</a>`).join('')}
    </div>`;
  }).join('');
 }
@@ -658,7 +660,7 @@ function setSources(rows){
  if(panel)panel.classList.toggle('has-content',validRows.length>0);
 }
 function renderGlobal(){
- $('globalGrid').innerHTML=REGIONS.map(r=>`<div class="region"><b>${esc(r[0])}</b>`+r.slice(1).map((x,i)=>`<a href="${esc(x)}" target="_blank" rel="noopener">${esc(i===0?x:'OPEN ↗')}</a>`).join('')+'</div>').join('');
+ $('globalGrid').innerHTML=REGIONS.map(r=>`<div class="region"><b>${esc(r[0])}</b>`+r.slice(1).map((x,i)=>`<a href="${esc(x)}" target="_blank" rel="noopener">${esc(i===0?x:'↗ '+x)}</a>`).join('')+'</div>').join('');
 }
 
 
