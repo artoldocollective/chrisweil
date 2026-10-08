@@ -1,9 +1,11 @@
+<!-- Version: 1.3.1 | Last Update: 2026-10-08 | Author: Sacrisoft | © All rights reserved -->
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sacrisoft® ISBN Inspector — Global Bibliographic Inspection</title>
+<title>Sacrisoft ISBN Inspector™ — Inspect & Search Books Now</title>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <style>
 :root{--bg:#f5f3ee;--ink:#111;--muted:#777;--line:#171717;--paper:#fffdf8;--ok:#16863d;--warn:#d66b00;--bad:#b52222}
@@ -46,52 +48,388 @@ video{width:100%;height:100%;object-fit:cover;display:block}
 .booktop{display:flex;gap:14px;align-items:flex-start;margin:12px 0}
 .title{font-size:25px;font-weight:900;line-height:1.02}
 .meta{margin-top:8px;color:#444;font-size:13px;line-height:1.45}
+.book-description{margin-top:18px;border-top:2px solid #111;padding-top:12px}
+.book-description .label{margin-bottom:6px}
+.book-description-text{font-size:13px;line-height:1.55;color:#222;max-width:78ch}
+.book-subjects{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.subject{border:1px solid #111;padding:4px 6px;font:10px monospace}
 .fields{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #111}
 .field{padding:9px 0;border-bottom:1px solid #bbb}
 .field:nth-child(odd){padding-right:12px;border-right:1px solid #bbb}
 .field:nth-child(even){padding-left:12px}
 .label{font:10px monospace;color:#777;text-transform:uppercase}
 .value{font-size:13px;font-weight:700;margin-top:2px}
-.sources{margin-top:16px}
-.source{border-top:1px solid #111;padding:9px 0;display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:center;font-size:12px}
-.source-name{font-weight:900}
-.source-msg{color:#555}
-.source-link{font:10px monospace;text-decoration:underline;color:#111}
+.sources{margin-top:18px}
+.source-group{margin-top:22px}
+.source-group:first-child{margin-top:12px}
+.source-group-title{font:10px monospace;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:8px 0 7px;border-bottom:2px solid #111}
+.source{border-bottom:1px solid #c8c8c8;padding:13px 0;display:grid;grid-template-columns:minmax(165px,1fr) minmax(120px,1fr) auto;gap:18px;align-items:center;font-size:12px}
+.source-name{font-weight:900;letter-spacing:.01em}
+.source-msg{color:#555;font-size:11px}
+.source-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;min-width:148px}
+.source-link{font:10px monospace;text-decoration:underline;color:#ff5000!important;white-space:nowrap}
+.source-link:hover{color:#ff5000!important}
 .consensus{margin-top:14px;border:2px solid #111;padding:11px;background:#fff}
 .consensus strong{font-size:18px}
 .conflict{margin-top:10px;padding:9px;background:#ffe8c7;border-left:5px solid var(--warn);font-size:12px}
 .global{margin-top:16px}
-.globalgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px}
+
 .region{border:1px solid #111;padding:8px;background:#fff;font-size:11px}
 .region b{display:block;font-size:12px;margin-bottom:5px}
-.region a{display:block;color:#111;text-decoration:underline;margin:3px 0}
+.region a{display:block;color:#ff5000!important;text-decoration:underline;margin:4px 0}
+a{color:#ff5000}
 .note{font:10px monospace;color:#666;padding:10px;border-top:1px solid #bbb;line-height:1.45}
 .hidden{display:none}
 @media(max-width:800px){
  .layout{grid-template-columns:1fr}
  .globalgrid{grid-template-columns:1fr 1fr}
- .source{grid-template-columns:125px 1fr}
- .source-link{grid-column:2}
+ .source{grid-template-columns:145px 1fr auto;gap:12px}
+ .source-actions{min-width:130px;gap:10px}
 }
 @media(max-width:520px){
- main{padding:10px}.head{padding:11px}.globalgrid{grid-template-columns:1fr}
+ main{padding:10px}.head{padding:11px}
  .fields{grid-template-columns:1fr}.field:nth-child(odd){border-right:0;padding-right:0}.field:nth-child(even){padding-left:0}
  .booktop{flex-direction:row}.cover{width:110px}
- .source{grid-template-columns:1fr}.source-link{grid-column:auto}
+ .source{grid-template-columns:1fr auto;gap:10px}
+ .source-msg{display:none}
+ .source-actions{min-width:auto;gap:10px}
+ .source-link{font-size:9px}
 }
 </style>
+
+<style id="source-results-fix">
+/* SOURCE RESULTS — presentation only */
+.sources{margin-top:22px}
+.source-group{margin-top:20px;border-top:2px solid #111}
+.source-group:first-child{margin-top:10px}
+.source-group-title{padding:9px 0 8px;font:10px monospace;font-weight:900;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;color:#111}
+.source-group-title:after{content:'+';float:right;font-size:14px}
+.source-group[open] .source-group-title:after{content:'−'}
+.source-group-body{max-height:360px;overflow:auto;scrollbar-width:none;-ms-overflow-style:none}
+.source-group-body::-webkit-scrollbar{display:none}
+.source{border-bottom:1px solid #ccc;padding:12px 0;display:grid;grid-template-columns:minmax(155px,1fr) minmax(110px,1fr) auto;gap:16px;align-items:center;font-size:12px}
+.source-name{font-weight:900}
+.source-msg{color:#555;font-size:11px}
+.source-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;min-width:145px}
+.source-link,.region a{color:#ff5000!important;text-decoration:underline}
+.source-link{font:10px monospace;white-space:nowrap}
+.globalgrid{max-height:430px;overflow:auto;scrollbar-width:none;-ms-overflow-style:none}
+.globalgrid::-webkit-scrollbar{display:none}
+a{color:#ff5000}
+@media(max-width:800px){
+ .source{grid-template-columns:145px 1fr auto;gap:12px}
+}
+@media(max-width:520px){
+ .source{grid-template-columns:1fr auto;gap:10px}
+ .source-msg{display:none}
+ .source-actions{min-width:auto}
+}
+</style>
+
+
+<style id="platforms-v8">
+.platform-group{margin-top:12px}
+.platform-group .source{grid-template-columns:1fr auto;padding:9px 0}
+.platform-group .source-msg{display:none}
+.platform-group .source-actions{min-width:auto}
+.platform-group .source-link{color:#ff5000!important}
+</style>
+
+<style id="v9-layout">
+.platforms-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;margin-top:12px}
+.platform-group{margin:0 0 18px;border-top:2px solid #111}
+.platform-group .source{grid-template-columns:1fr auto;padding:10px 0}
+.platform-group .source-msg{display:none}
+.platform-group .source-actions{min-width:auto}
+.platform-group .source-link{color:#ff5000!important}
+#amazonStatus{margin:0 0 6px}
+@media(max-width:800px){.platforms-grid{grid-template-columns:1fr}}
+/* Results are intentionally compact; metadata lives in section 04. */
+#sources .source-group-body{max-height:300px;overflow:auto;scrollbar-width:none;-ms-overflow-style:none}
+#sources .source-group-body::-webkit-scrollbar{display:none}
+</style>
+
+<style id="conditional-sections">
+#bibliographicPanel,#platformsPanel,#sourceResultsPanel{display:none}
+#bibliographicPanel.has-content,#platformsPanel.has-content,#sourceResultsPanel.has-content{display:block}
+</style>
+<style id="v12-results-only">
+#sourceResultsPanel:not(.has-content){display:none!important}
+#sources .source-msg:empty{display:none}
+#sources .source{grid-template-columns:1fr auto}
+#sources .source-actions{min-width:auto}
+</style>
+
+<style id="v13-from-v12-layout">
+/* Global catalogue matrix removed from the interface. */
+#globalGrid{display:none!important}
+
+/* Compact evidence-only source results. */
+#sourceResultsPanel .source-group-body{
+  max-height:none;
+  overflow:visible;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+#sourceResultsPanel .source-group-body::-webkit-scrollbar{display:none}
+
+#sourceResultsPanel .source{
+  display:grid;
+  grid-template-columns:minmax(150px,1fr) minmax(80px,auto) auto;
+  align-items:center;
+  gap:14px;
+  padding:8px 0;
+  min-height:34px;
+}
+#sourceResultsPanel .source-msg{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#sourceResultsPanel .source-actions{
+  min-width:auto;
+  justify-content:flex-end;
+}
+#sourceResultsPanel .source-link{
+  color:#ff5000!important;
+  white-space:nowrap;
+}
+@media(max-width:520px){
+  #sourceResultsPanel .source{
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px;
+  }
+  #sourceResultsPanel .source-msg{display:none}
+}
+</style>
+
+
+<style id="v15-platform-layout">
+/* The panel heading already identifies PLATFORMS; no duplicate badge. */
+#amazonStatus:empty{display:none}
+
+/* Platforms: Retail + Discovery only. Library/catalogue sites live in Discovery. */
+#amazonLinks{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  column-gap:26px;
+  align-items:stretch;
+}
+#amazonLinks .platform-group{
+  margin:0 0 22px;
+  box-sizing:border-box;
+  height:100%;
+  align-self:stretch;
+}
+@media(max-width:800px){
+  #amazonLinks{grid-template-columns:1fr}
+}
+</style>
+
+
+<style id="v16-inspect-rainbow">
+/* INSPECT — animated rainbow treatment matching the Collage Machine control. */
+#inspect{
+  border:0;
+  color:#fff;
+  background:linear-gradient(270deg,red,orange,yellow,green,cyan,blue,violet,red);
+  background-size:400% 400%;
+  animation:inspectRainbowFlow 6s ease infinite;
+  box-shadow:0 12px 35px rgba(0,0,0,.22);
+}
+#inspect:hover{
+  color:#fff;
+  transform:translateY(-1px) scale(1.01);
+}
+#inspect:focus,
+#inspect:focus-visible,
+#inspect:active{
+  outline:none!important;
+  box-shadow:0 12px 35px rgba(0,0,0,.22)!important;
+}
+@keyframes inspectRainbowFlow{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* Remove browser blue focus outlines from the ISBN controls as well. */
+.btn:focus,
+.btn:focus-visible,
+.manual input:focus,
+.manual input:focus-visible{
+  outline:none!important;
+}
+</style>
+
+
+<style id="institutions-layout">
+.institutions-panel{width:100%;margin-top:18px}
+.institutions-inner{padding:16px}
+.institutions-kicker{margin-bottom:10px}
+.institutions-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  border-top:2px solid #111;
+  border-left:1px solid #bbb;
+}
+.institution-card{
+  min-width:0;
+  padding:11px 13px 12px;
+  border-right:1px solid #bbb;
+  border-bottom:1px solid #bbb;
+  background:#fffdf8;
+}
+.institution-region{
+  font:900 10px monospace;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+.institution-link{
+  display:block;
+  color:#ff5000!important;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.3;
+  margin-top:3px;
+}
+.institution-link:hover{text-decoration:underline}
+.institution-link.secondary{font-weight:600;font-size:11px}
+@media(max-width:1000px){.institutions-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.institutions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.institutions-grid{grid-template-columns:1fr}}
+</style>
+
+
+<style id="institutions-after-search">
+.institutions-panel{
+  width:100%;
+  margin-top:18px;
+}
+.institutions-panel.hidden{display:none!important}
+.institutions-panel details{width:100%}
+.institutions-summary{
+  list-style:none;
+  cursor:pointer;
+  user-select:none;
+  position:relative;
+}
+.institutions-summary::-webkit-details-marker{display:none}
+.institutions-summary:after{
+  content:'+';
+  position:absolute;
+  right:12px;
+  font:900 18px monospace;
+}
+.institutions-panel details[open] .institutions-summary:after{content:'−'}
+.institutions-inner{padding:16px}
+.institutions-kicker{margin-bottom:10px}
+.institutions-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  border-top:2px solid #111;
+  border-left:1px solid #bbb;
+}
+.institution-card{
+  min-width:0;
+  padding:11px 13px 12px;
+  border-right:1px solid #bbb;
+  border-bottom:1px solid #bbb;
+  background:#fffdf8;
+}
+.institution-region{
+  font:900 10px monospace;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+.institution-link{
+  display:block;
+  color:#ff5000!important;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.3;
+  margin-top:3px;
+  overflow-wrap:anywhere;
+}
+.institution-link:hover{text-decoration:underline}
+.institution-link.secondary{font-weight:600;font-size:11px}
+@media(max-width:1000px){
+  .institutions-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .institutions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .institutions-inner{padding:12px}
+}
+@media(max-width:480px){
+  .institutions-grid{grid-template-columns:1fr}
+  .institutions-summary{font-size:10px}
+}
+
+/* PLATFORM GROUPS — auto-expand; no internal scrollbars */
+#amazonLinks .source-group-body{
+  max-height:none;
+  height:auto;
+  overflow:visible;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+#amazonLinks .source-group-body::-webkit-scrollbar{display:none}
+</style>
+
+
+<style id="sacrisoft-footer">
+.sacrisoft-footer{
+  width:100%;
+  margin-top:32px;
+  padding:18px 10px 8px;
+  border-top:2px solid #111;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  font:11px monospace;
+  text-align:center;
+}
+.sacrisoft-footer img{
+  width:auto;
+  height:24px;
+  max-width:140px;
+  object-fit:contain;
+  display:block;
+}
+</style>
+
+<style id="mobile-institutions-one-line">
+@media (max-width: 800px){
+  #institutions .source-group,
+  #institutions .source-group-body,
+  #institutions .source-link,
+  #institutions a{
+    white-space: nowrap;
+  }
+  #institutions .source-group-body{
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+</style>
+
 </head>
 <body>
-<header><div class="rainbow"></div><div class="head"><div class="brand">SACRISOFT® / ISBN INSPECTOR</div><div class="code">GLOBAL / 002</div></div></header>
+<header><div class="rainbow"></div></header>
 
 <main>
-<div class="kicker">Sacrisoft Bibliographic Unit</div>
-<h1>GLOBAL<br>BIBLIOGRAPHIC<br>INSPECTION</h1>
-<p class="sub">Scan an ISBN. The Inspector queries multiple bibliographic systems, compares records, detects edition conflicts and exposes the wider catalogue footprint of the object.</p>
+<div class="kicker">Sacrisoft</div>
+<h1>ISBN Inspector™</h1>
+
 
 <div class="layout">
 <section class="panel">
-  <div class="panelhead">01 / ACQUISITION — BARCODE + OCR</div>
+  <div class="panelhead">ACQUISITION — BARCODE + OCR</div>
   <div class="camera">
     <video id="video" autoplay muted playsinline></video>
     <div class="scanbox"></div>
@@ -104,36 +442,55 @@ video{width:100%;height:100%;object-fit:cover;display:block}
   <div class="manual">
     <input id="isbnInput" placeholder="ENTER ISBN-10 / ISBN-13">
     <button class="btn" id="inspect">INSPECT</button>
-    <button class="btn" id="test">TEST ISBN</button>
   </div>
-  <div class="status" id="scanStatus">READY — POINT CAMERA AT BOOK BARCODE</div>
+  <div class="status" id="scanStatus">READY</div>
 </section>
 
-<section class="panel">
-  <div class="panelhead">02 / INSPECTION REPORT</div>
+<section class="panel global" id="bibliographicPanel">
+ <div class="panelhead">BIBLIOGRAPHIC RECORD / GLOBAL CATALOGUE</div>
+ <div class="inspection">
+   <div class="kicker">Object status</div>
+   <div class="bigisbn" id="isbnDisplay">NO ISBN</div>
+   <div class="meta" id="exactNotice"></div>
+   <div id="summary">Awaiting identification.</div>
+   <div id="diagnostic" class="meta"></div>
+   <div id="book"></div>
+   <div id="consensus"></div>
+ </div>
+</section>
+<section class="panel" id="sourceResultsPanel">
+  <div class="panelhead">SOURCE RESULTS</div>
   <div class="inspection">
-    <div class="kicker">Object status</div>
-    <div class="bigisbn" id="isbnDisplay">NO ISBN</div>
-    <div id="summary">Awaiting identification.</div>
-    <div id="diagnostic" class="meta"></div>
-    <div id="book"></div>
     <div class="sources" id="sources"></div>
-    <div id="consensus"></div>
   </div>
+</section>
+<section class="panel global" id="platformsPanel">
+ <div class="panelhead">PLATFORMS</div>
+ <div class="inspection">
+
+   <div id="amazonStatus" class="meta">Awaiting ISBN.</div>
+   <div id="amazonLinks" class="platforms-grid"></div>
+ </div>
 </section>
 </div>
 
-<section class="panel global">
- <div class="panelhead">03 / GLOBAL SOURCE MATRIX</div>
- <div class="globalgrid" id="globalGrid"></div>
- <div class="note">MAXIMUM BROWSER-ONLINE MODE. Direct querying uses public machine-readable endpoints where available: Open Library, Google Books, Library of Congress, BnF, DNB, Crossref, Internet Archive and Wikidata. Every other useful catalogue is exposed as an exact ISBN search link. Authenticated/restricted APIs such as WorldCat or Amazon's authenticated product APIs cannot be safely embedded with credentials in a standalone HTML file. No catalogue is scraped.</div>
+<section class="panel institutions-panel hidden" id="institutionsPanel">
+  <details id="institutionsDetails">
+    <summary class="panelhead institutions-summary">WORLD INSTITUTIONS</summary>
+    <div class="institutions-inner">
+      <div id="institutionsGrid" class="institutions-grid"></div>
+    </div>
+  </details>
 </section>
+
 </main>
 
 <script type="module">
+document.getElementById('copyrightYear').textContent = new Date().getFullYear();
+
 const $=id=>document.getElementById(id);
 const video=$('video'), scanStatus=$('scanStatus'), camStatus=$('camStatus');
-let stream=null, reader=null, ocrWorker=null, ocrBusy=false, lastCandidate='', confirmations=0, stopped=false;
+let stream=null, reader=null, ocrWorker=null, ocrBusy=false, confirmations=0, stopped=false, lastOCRCandidate='';
 
 const SOURCES=[
  {id:'open',name:'OPEN LIBRARY',type:'api'},
@@ -146,82 +503,164 @@ const SOURCES=[
  {id:'wikidata',name:'WIKIDATA',type:'api'},
  {id:'sbn',name:'SBN / ITALY',type:'link'},
  {id:'worldcat',name:'WORLDCAT',type:'link'},
- {id:'amazon',name:'AMAZON',type:'link'},
+ {id:'amazon',name:'AMAZON / KDP',type:'link'},
+ {id:'isbnsearch',name:'ISBN SEARCH',type:'link'},
+ {id:'goodreads',name:'GOODREADS',type:'link'},
  {id:'trove',name:'TROVE / AUSTRALIA',type:'link'},
  {id:'bne',name:'BNE / SPAIN',type:'link'}
 ];
 
 const REGIONS=[
- ['ITALY','SBN / OPAC SBN','https://opac.sbn.it/'],
+ ['ARGENTINA','Biblioteca Nacional Mariano Moreno','https://catalogo.bn.gov.ar/'],
+ ['AUSTRALIA','Trove','https://trove.nla.gov.au/'],
+ ['AUSTRIA','Österreichische Nationalbibliothek','https://search.onb.ac.at/'],
+ ['BELGIUM','KBR','https://www.kbr.be/'],
+ ['BRAZIL','Biblioteca Nacional','https://www.gov.br/bn/'],
+ ['CANADA','Library and Archives Canada','https://library-archives.canada.ca/'],
+ ['CHILE','Biblioteca Nacional de Chile','https://www.bibliotecanacional.gob.cl/'],
+ ['CZECHIA','National Library / SKC','https://www.nkp.cz/'],
+ ['DENMARK','Royal Danish Library','https://soeg.kb.dk/'],
+ ['FINLAND','Finna / National Library','https://www.finna.fi/'],
  ['FRANCE','BnF Catalogue','https://catalogue.bnf.fr/','data.bnf.fr'],
  ['GERMANY','Deutsche Nationalbibliothek','https://portal.dnb.de/'],
- ['UK / IRELAND','British Library / BNB','https://explore.bl.uk/'],
- ['SPAIN','Biblioteca Nacional de España','https://catalogo.bne.es/','datos.bne.es'],
- ['PORTUGAL','Biblioteca Nacional / PORBASE','https://porbase.bnportugal.gov.pt/'],
- ['NETHERLANDS','Koninklijke Bibliotheek','https://www.kb.nl/'],
- ['BELGIUM','KBR','https://www.kbr.be/'],
- ['SWITZERLAND','Helveticat','https://www.helveticat.ch/'],
- ['AUSTRIA','Österreichische Nationalbibliothek','https://search.onb.ac.at/'],
- ['DENMARK','Royal Danish Library','https://soeg.kb.dk/'],
- ['SWEDEN','LIBRIS','https://libris.kb.se/'],
- ['NORWAY','Oria / National Library','https://www.nb.no/'],
- ['FINLAND','Finna / National Library','https://www.finna.fi/'],
- ['POLAND','National Library / NUKAT','https://katalogi.bn.org.pl/'],
- ['CZECHIA','National Library / SKC','https://www.nkp.cz/'],
- ['SLOVENIA','COBISS.SI','https://plus.cobiss.net/cobiss/si/en/bib/search'],
- ['USA','Library of Congress','https://www.loc.gov/books/'],
- ['CANADA','Library and Archives Canada','https://library-archives.canada.ca/'],
- ['AUSTRALIA','Trove','https://trove.nla.gov.au/'],
- ['NEW ZEALAND','National Library / Te Puna','https://natlib.govt.nz/'],
- ['JAPAN','National Diet Library / Japan Search','https://ndlsearch.ndl.go.jp/'],
- ['SOUTH KOREA','National Library of Korea','https://www.nl.go.kr/'],
  ['INDIA','National Library / INFLIBNET','https://www.nationallibrary.gov.in/'],
- ['BRAZIL','Biblioteca Nacional','https://www.gov.br/bn/'],
+ ['ITALY','SBN / OPAC SBN','https://opac.sbn.it/'],
+ ['JAPAN','National Diet Library / Japan Search','https://ndlsearch.ndl.go.jp/'],
  ['MEXICO','Biblioteca Nacional / UNAM','https://catalogo.iib.unam.mx/'],
- ['ARGENTINA','Biblioteca Nacional Mariano Moreno','https://catalogo.bn.gov.ar/'],
- ['CHILE','Biblioteca Nacional de Chile','https://www.bibliotecanacional.gob.cl/'],
- ['GLOBAL','WorldCat','https://search.worldcat.org/'],
- ['GLOBAL','Open Library','https://openlibrary.org/'],
- ['GLOBAL','Google Books','https://books.google.com/'],
- ['GLOBAL','Internet Archive','https://archive.org/'],
- ['GLOBAL','Wikidata','https://www.wikidata.org/'],
- ['GLOBAL','Crossref','https://search.crossref.org/'],
- ['GLOBAL','Goodreads — reference only','https://www.goodreads.com/'],
- ['USA','HathiTrust','https://catalog.hathitrust.org/'],
- ['USA','Internet Book Database / library discovery','https://www.worldcat.org/']
+ ['NETHERLANDS','Koninklijke Bibliotheek','https://www.kb.nl/'],
+ ['NEW ZEALAND','National Library / Te Puna','https://natlib.govt.nz/'],
+ ['NORWAY','Oria / National Library','https://www.nb.no/'],
+ ['POLAND','National Library / NUKAT','https://katalogi.bn.org.pl/'],
+ ['PORTUGAL','Biblioteca Nacional / PORBASE','https://porbase.bnportugal.gov.pt/'],
+ ['SLOVENIA','COBISS.SI','https://plus.cobiss.net/cobiss/si/en/bib/search'],
+ ['SOUTH KOREA','National Library of Korea','https://www.nl.go.kr/'],
+ ['SPAIN','Biblioteca Nacional de España','https://catalogo.bne.es/','datos.bne.es'],
+ ['SWEDEN','LIBRIS','https://libris.kb.se/'],
+ ['SWITZERLAND','Helveticat','https://www.helveticat.ch/'],
+ ['UK / IRELAND','British Library / BNB','https://explore.bl.uk/'],
+ ['USA','Library of Congress','https://www.loc.gov/books/'],
 ];
+
+
+function renderInstitutions(){
+ const grid=document.getElementById('institutionsGrid');
+ if(!grid)return;
+ grid.innerHTML=REGIONS.map(r=>{
+   const region=esc(r[0]);
+   const links=r.slice(1);
+   return `<div class="institution-card">
+     <div class="institution-region">${region}</div>
+     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x)}" target="_blank" rel="noopener">${esc(i===0?x:'↗ '+x)}</a>`).join('')}
+   </div>`;
+ }).join('');
+}
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function normalizeISBN(raw){
- let s=(raw||'').toUpperCase()
-   .replace(/[OoQ]/g,'0').replace(/[Il|]/g,'1').replace(/[Ss]/g,'5')
-   .replace(/[^0-9X]/g,'');
- if(s.length===13 && /^97[89]/.test(s) && check13(s)) return s;
- if(s.length===10 && check10(s)) return to13(s);
+ let s=(raw||'').toUpperCase().replace(/[\s-]/g,'');
+ if(/^97[89]\d{10}$/.test(s) && check13(s)) return s;
+ if(/^\d{9}[\dX]$/.test(s) && check10(s)) return to13(s);
  return null;
 }
 function check13(s){let sum=0;for(let i=0;i<13;i++)sum+=+s[i]*(i%2?3:1);return sum%10===0}
 function check10(s){let sum=0;for(let i=0;i<10;i++)sum+=(s[i]==='X'?10:+s[i])*(10-i);return sum%11===0}
-function to13(s){let core='978'+s.slice(0,9),sum=0;for(let i=0;i<12;i++)sum+=+core[i]*(i%2?3:1);return core+(10-sum%10)%10}
+function to13(s){
+ // ISBN-10 converts only to the 978 prefix.
+ // A 979 ISBN-13 is NEVER converted through this function.
+ let core='978'+s.slice(0,9),sum=0;
+ for(let i=0;i<12;i++)sum+=+core[i]*(i%2?3:1);
+ return core+(10-sum%10)%10;
+}
 function googleUrl(isbn){return 'https://books.google.com/books?vid=isbn'+encodeURIComponent(isbn)}
-function amazonUrl(isbn){return 'https://www.amazon.com/s?k='+encodeURIComponent(isbn)+'&i=stripbooks'}
+function amazonUrl(isbn,market='www.amazon.it'){return 'https://'+market+'/s?k='+encodeURIComponent(isbn)+'&i=stripbooks'}
+function isbnSearchUrl(isbn){return 'https://isbnsearch.org/isbn/'+encodeURIComponent(isbn)}
+function goodreadsUrl(isbn){return 'https://www.goodreads.com/search?q='+encodeURIComponent(isbn)+'&search_type=books'}
 function worldcatUrl(isbn){return 'https://search.worldcat.org/search?q='+encodeURIComponent('bn:'+isbn)}
 function sbnUrl(isbn){return 'https://opac.sbn.it/risultati-ricerca-avanzata?query='+encodeURIComponent(isbn)}
 function dnbUrl(isbn){return 'https://portal.dnb.de/opac.htm?query='+encodeURIComponent(isbn)+'&method=simpleSearch'}
 function bnfUrl(isbn){return 'https://catalogue.bnf.fr/rechercher.do?motRecherche='+encodeURIComponent(isbn)}
-function sourceRow(name,state,msg='',link=''){
- return `<div class="source"><div class="source-name">${esc(name)}</div><div class="source-msg">${esc(msg)}</div><div>${link?`<a class="source-link" target="_blank" rel="noopener" href="${link}">OPEN SOURCE ↗</a>`:''}<span class="badge ${state==='FOUND'?'ok':state==='ERROR'?'bad':state==='NO MATCH'?'warn':'wait'}">${esc(state)}</span></div></div>`;
+const SOURCE_GROUPS=[
+ ['ITALY',['SBN / ITALY']],
+ ['FRANCE',['BnF / FRANCE']],
+ ['GERMANY',['DEUTSCHE NATIONALBIBLIOTHEK']],
+ ['SPAIN',['BNE / SPAIN']],
+ ['UNITED STATES',['LIBRARY OF CONGRESS']],
+ ['AUSTRALIA',['TROVE / AUSTRALIA']],
+ ['GLOBAL / BIBLIOGRAPHIC',['OPEN LIBRARY','GOOGLE BOOKS','CROSSREF','INTERNET ARCHIVE','WIKIDATA','WORLDCAT']],
+ ['COMMERCIAL',['AMAZON / KDP','ISBN SEARCH']],
+ ['COMMUNITY',['GOODREADS']]
+];
+const SOURCE_GROUP_ORDER=Object.fromEntries(SOURCE_GROUPS.map((g,i)=>g[0]?[g[1],i]:null).filter(Boolean));
+const SOURCE_TO_GROUP={};
+SOURCE_GROUPS.forEach(([group,names])=>names.forEach(n=>SOURCE_TO_GROUP[n]=group));
+function sourceGroup(name){
+  if(SOURCE_TO_GROUP[name]) return SOURCE_TO_GROUP[name];
+  if(/DISCOVERY|CANDIDATE/i.test(name)) return 'DISCOVERY';
+  return 'OTHER';
 }
-function setSources(rows){$('sources').innerHTML='<div class="kicker">Source results</div>'+rows.join('')}
+function sourceRow(name,state,msg='',link=''){
+ const isResult=!!link&&(state==='FOUND'||state==='CANDIDATE'||state==='EXACT');
+ if(!isResult)return '';
+ const group=sourceGroup(name);
+ return `<div class="source" data-group="${esc(group)}">
+   <div class="source-name">${esc(name)}</div>
+   <div class="source-msg">${esc(msg||'')}</div>
+   <div class="source-actions">
+     <a class="source-link" target="_blank" rel="noopener" href="${esc(link)}">VIEW ↗</a>
+   </div>
+ </div>`;
+}
+
+function updateConditionalSections(){
+ const source=document.getElementById('sourceResultsPanel');
+ const bib=document.getElementById('bibliographicPanel');
+ const plat=document.getElementById('platformsPanel');
+ const sourceHas=!!document.querySelector('#sources .source');
+ const book=document.getElementById('book');
+ const bookHas=!!book && !!book.textContent.trim() && !/Title unavailable|Awaiting/i.test(book.textContent);
+ const platformHas=!!document.getElementById('amazonLinks')?.textContent.trim();
+ if(source) source.classList.toggle('has-content',sourceHas);
+ if(bib) bib.classList.toggle('has-content',bookHas);
+ if(plat) plat.classList.toggle('has-content',platformHas);
+}
+function setSources(rows){
+ const validRows=rows.filter(Boolean);
+ const groups={};
+ validRows.forEach(row=>{
+   const m=row.match(/data-group="([^"]+)"/);
+   const group=m?m[1]:'OTHER';
+   (groups[group] ||= []).push(row);
+ });
+ const preferred=['ITALY','FRANCE','GERMANY','SPAIN','UNITED STATES','AUSTRALIA','GLOBAL / BIBLIOGRAPHIC','COMMERCIAL','COMMUNITY','DISCOVERY','OTHER'];
+ const keys=Object.keys(groups).sort((a,b)=>{
+   const ai=preferred.indexOf(a),bi=preferred.indexOf(b);
+   return (ai<0?99:ai)-(bi<0?99:bi);
+ });
+ let out='';
+ keys.forEach(group=>{
+   out+=`<details class="source-group" open><summary class="source-group-title">${esc(group)}</summary><div class="source-group-body">${groups[group].join('')}</div></details>`;
+ });
+ $('sources').innerHTML=out;
+ const panel=document.getElementById('sourceResultsPanel');
+ if(panel)panel.classList.toggle('has-content',validRows.length>0);
+}
 function renderGlobal(){
  $('globalGrid').innerHTML=REGIONS.map(r=>`<div class="region"><b>${esc(r[0])}</b>`+r.slice(1).map((x,i)=>`<a href="${esc(x)}" target="_blank" rel="noopener">${esc(i===0?x:'↗ '+x)}</a>`).join('')+'</div>').join('');
 }
-renderGlobal();
+
+
+
+function showInstitutions(){
+ const panel=document.getElementById('institutionsPanel');
+ if(!panel)return;
+ panel.classList.remove('hidden');
+ renderInstitutions();
+}
 
 async function loadZXing(){
  try{
   const mod=await import('https://cdn.jsdelivr.net/npm/@zxing/browser@0.2.1/+esm');
-  return mod.BrowserMultiFormatReader;
+  return mod;
  }catch(e){return null}
 }
 async function startCamera(){
@@ -233,13 +672,19 @@ async function startCamera(){
   camStatus.textContent='CAMERA ONLINE';
   scanStatus.textContent='ZXING + OCR ACTIVE — HOLD ISBN INSIDE FRAME';
   $('start').disabled=true;$('stop').disabled=false;
-  const Reader=await loadZXing();
-  if(Reader){
-   reader=new Reader();
+  const z=await loadZXing();
+  if(z?.BrowserMultiFormatReader){
+   const hints=new Map();
+   if(z.DecodeHintType && z.BarcodeFormat){
+    hints.set(z.DecodeHintType.POSSIBLE_FORMATS,[z.BarcodeFormat.EAN_13]);
+    hints.set(z.DecodeHintType.TRY_HARDER,true);
+   }
+   reader=new z.BrowserMultiFormatReader(hints);
    reader.decodeFromVideoElement(video,(result,err)=>{
     if(stopped||!result)return;
-    const isbn=normalizeISBN(result.getText());
-    if(isbn) acceptCandidate(isbn,'BARCODE');
+    const raw=(result.getText()||'').replace(/[^0-9]/g,'');
+    // ISBN-13 on a book is encoded as EAN-13. Never rewrite a barcode value.
+    if(raw.length===13 && /^97[89]/.test(raw) && check13(raw)) acceptCandidate(raw,'EAN-13 BARCODE');
    });
   }
   startOCR();
@@ -277,8 +722,14 @@ async function ocrLoop(){
     ctx.drawImage(video,sx,sy,sw,sh,0,0,c.width,c.height);
     const {data}=await ocrWorker.recognize(c);
     const text=data.text||'';
-    const matches=text.toUpperCase().match(/(?:ISBN(?:-1[03])?[\s:]*)?(97[89](?:[\s-]?\d){10}|\d(?:[\s-]?\d){8}[\dX])/g)||[];
-    for(const m of matches){const isbn=normalizeISBN(m);if(isbn){acceptCandidate(isbn,'OCR');break}}
+    const upper=text.toUpperCase();
+    const labeled=[...upper.matchAll(/ISBN(?:-1[03])?[\\s:\-]*([0-9X\\s-]{10,20})/g)].map(m=>m[1]);
+    const generic=[...upper.matchAll(/97[89](?:[\\s-]?\\d){10}/g)].map(m=>m[0]);
+    const matches=[...labeled,...generic];
+    for(const m of matches){
+      const isbn=normalizeISBN(m);
+      if(isbn) acceptOCRCandidate(isbn);
+    }
    }catch{}
    ocrBusy=false;
   }
@@ -286,41 +737,281 @@ async function ocrLoop(){
  }
 }
 function acceptCandidate(isbn,method){
- if(isbn===lastCandidate)confirmations++;else{lastCandidate=isbn;confirmations=1}
- scanStatus.textContent=`${method} CANDIDATE: ${isbn} / ${confirmations>=2?'CONFIRMED':'CONFIRMING...'}`;
- if(method==='BARCODE' || confirmations>=2){inspectISBN(isbn);confirmations=0}
+ scanStatus.textContent=`${method} CANDIDATE: ${isbn} / EXACT BARCODE`;
+ inspectISBN(isbn);
 }
-$('inspect').onclick=()=>{const isbn=normalizeISBN($('isbnInput').value);if(isbn)inspectISBN(isbn);else scanStatus.textContent='INVALID ISBN — CHECK NUMBER';}
+function acceptOCRCandidate(isbn){
+ if(isbn===lastOCRCandidate){
+   confirmations++;
+ }else{
+   lastOCRCandidate=isbn;
+   confirmations=1;
+ }
+ scanStatus.textContent=`OCR CANDIDATE: ${isbn} / EXACT READ ${confirmations}/2`;
+ // OCR is deliberately conservative: the exact same valid ISBN must be read twice.
+ if(confirmations>=2){
+   inspectISBN(isbn);
+   confirmations=0;
+   lastOCRCandidate='';
+ }
+}
+$('inspect').onclick=()=>{
+ const raw=$('isbnInput').value;
+ const isbn=normalizeISBN(raw);
+ if(isbn){
+   $('isbnInput').value=raw.trim();
+   inspectISBN(isbn);
+ }else{
+   scanStatus.textContent='INVALID ISBN — NO LOOKUP PERFORMED';
+ }
+}
 $('isbnInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('inspect').click()});
-$('test').onclick=()=>{ $('isbnInput').value='9780140328721'; $('inspect').click(); };
 
+
+async function discoverOpenLibrary(isbn){
+ try{
+  const u='https://openlibrary.org/search.json?q='+encodeURIComponent(isbn)+'&fields=key,title,author_name,publisher,first_publish_year,isbn,edition_key,cover_i&limit=10';
+  const j=await fetch(u).then(r=>r.ok?r.json():null);
+  const docs=j?.docs||[];
+  const exact=docs.find(d=>(d.isbn||[]).map(x=>x.replace(/-/g,'')).includes(isbn));
+  const d=exact||docs[0];
+  if(!d)return null;
+  return {
+   source:'OPEN LIBRARY DISCOVERY',
+   exact:!!exact,
+   title:d.title,
+   authors:(d.author_name||[]).join(', '),
+   publisher:(d.publisher||[])[0],
+   date:d.first_publish_year,
+   cover:d.cover_i?'https://covers.openlibrary.org/b/id/'+d.cover_i+'-M.jpg':null,
+   subjects:normalizeSubjects(d.subject),
+   url:d.key?'https://openlibrary.org'+d.key:linkFor('open',isbn),
+   note:exact?'Exact ISBN in search index':'Discovery result — verify edition'
+  };
+ }catch{return null}
+}
+async function discoverGoogle(isbn){
+ try{
+  const queries=[
+   'isbn:'+isbn,
+   '"'+isbn+'"',
+   isbn
+  ];
+  for(const q of queries){
+   const j=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=20').then(r=>r.ok?r.json():null);
+   const items=j?.items||[];
+   if(!items.length)continue;
+   const exact=items.find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=>i.identifier.replace(/-/g,'')===isbn));
+   const v=(exact||items[0]).volumeInfo||{};
+   return {
+    source:'GOOGLE BOOKS DISCOVERY',
+    exact:!!exact,
+    title:[v.title,v.subtitle].filter(Boolean).join(': '),
+    authors:(v.authors||[]).join(', '),
+    publisher:v.publisher,
+    date:v.publishedDate,
+    pages:v.pageCount,
+    cover:v.imageLinks?.thumbnail?.replace('http:','https:'),
+    url:(exact||items[0]).volumeInfo?.infoLink||googleUrl(isbn),
+    note:exact?'Exact ISBN in volume metadata':'Search result — verify edition'
+   };
+  }
+ }catch{}
+ return null;
+}
+async function discoverCrossref(isbn){
+ try{
+  const qs=[
+   'https://api.crossref.org/works?query.bibliographic='+encodeURIComponent(isbn)+'&rows=10',
+   'https://api.crossref.org/works?filter='+encodeURIComponent('isbn:'+isbn)+'&rows=10'
+  ];
+  for(const u of qs){
+   const j=await fetch(u).then(r=>r.ok?r.json():null);
+   const item=j?.message?.items?.[0];
+   if(item)return {
+    source:'CROSSREF DISCOVERY',
+    exact:(item.ISBN||[]).map(x=>x.replace(/-/g,'')).includes(isbn),
+    title:item.title?.[0],
+    authors:(item.author||[]).map(a=>[a.given,a.family].filter(Boolean).join(' ')).join(', '),
+    publisher:item.publisher,
+    date:item.published?.['date-parts']?.[0]?.join('-'),
+    url:item.URL||'https://search.crossref.org/?q='+encodeURIComponent(isbn),
+    note:'DOI metadata discovery'
+   };
+  }
+ }catch{}
+ return null;
+}
+async function discoveryPhase(isbn){
+ const [a,b,c]=await Promise.all([
+  discoverOpenLibrary(isbn),
+  discoverGoogle(isbn),
+  discoverCrossref(isbn)
+ ]);
+ return [a,b,c].filter(Boolean);
+}
+
+function renderCommercialDiscovery(isbn){
+ const platforms=[
+  ['RETAIL','AbeBooks','https://www.abebooks.com/servlet/SearchResults?kn='+encodeURIComponent(isbn)],
+  ['RETAIL','Alibris','https://www.alibris.com/search/books/isbn/'+encodeURIComponent(isbn)],
+  ['RETAIL','Amazon France','https://www.amazon.fr/s?k='+encodeURIComponent(isbn)+'&i=stripbooks'],
+  ['RETAIL','Amazon Germany','https://www.amazon.de/s?k='+encodeURIComponent(isbn)+'&i=stripbooks'],
+  ['RETAIL','Amazon Italy','https://www.amazon.it/s?k='+encodeURIComponent(isbn)+'&i=stripbooks'],
+  ['RETAIL','Amazon UK','https://www.amazon.co.uk/s?k='+encodeURIComponent(isbn)+'&i=stripbooks'],
+  ['RETAIL','Amazon US','https://www.amazon.com/s?k='+encodeURIComponent(isbn)+'&i=stripbooks'],
+  ['RETAIL','Barnes & Noble','https://www.barnesandnoble.com/s/'+encodeURIComponent(isbn)],
+  ['RETAIL','Blackwell’s','https://blackwells.co.uk/bookshop/search?keyword='+encodeURIComponent(isbn)],
+  ['RETAIL','Booklooker.de','https://www.booklooker.de/app/result.php?isbn='+encodeURIComponent(isbn)],
+  ['RETAIL','Bookshop.org','https://bookshop.org/search?keywords='+encodeURIComponent(isbn)],
+  ['RETAIL','Fnac','https://www.fnac.com/SearchResult/ResultList.aspx?Search='+encodeURIComponent(isbn)],
+  ['RETAIL','IBS','https://www.ibs.it/search/?ts=as&query='+encodeURIComponent(isbn)],
+  ['RETAIL','LaFeltrinelli','https://www.lafeltrinelli.it/search?query='+encodeURIComponent(isbn)],
+  ['RETAIL','Thalia','https://www.thalia.de/suche?sq='+encodeURIComponent(isbn)],
+  ['RETAIL','Waterstones','https://www.waterstones.com/search?term='+encodeURIComponent(isbn)],
+  ['DISCOVERY','BookFinder','https://www.bookfinder.com/search/?isbn='+encodeURIComponent(isbn)],
+  ['DISCOVERY','Crossref','https://search.crossref.org/'],
+  ['DISCOVERY','Goodreads','https://www.goodreads.com/search?q='+encodeURIComponent(isbn)+'&search_type=books'],
+  ['DISCOVERY','Google Books','https://books.google.com/books?vid=isbn'+encodeURIComponent(isbn)],
+  ['DISCOVERY','HathiTrust','https://catalog.hathitrust.org/Search/Home?lookfor='+encodeURIComponent(isbn)+'&searchtype=all'],
+  ['DISCOVERY','Internet Archive','https://archive.org/search?query='+encodeURIComponent(isbn)],
+  ['DISCOVERY','ISBN Search','https://isbnsearch.org/isbn/'+encodeURIComponent(isbn)],
+  ['DISCOVERY','LibraryThing','https://www.librarything.com/search.php?search='+encodeURIComponent(isbn)],
+  ['DISCOVERY','Open Library','https://openlibrary.org/isbn/'+encodeURIComponent(isbn)],
+  ['DISCOVERY','Wikidata','https://www.wikidata.org/'],
+  ['DISCOVERY','WorldCat','https://search.worldcat.org/search?q=bn:'+encodeURIComponent(isbn)],
+ ];
+ const groups={};
+ platforms.forEach(([g,n,u])=>(groups[g] ||= []).push([n,u]));
+ let out='';
+ Object.entries(groups).forEach(([group,items])=>{
+   out+=`<details class="source-group platform-group" ${group==='RETAIL'||group==='DISCOVERY'?'open':''}>
+     <summary class="source-group-title">${esc(group)}</summary>
+     <div class="source-group-body">
+       ${items.map(([name,url])=>`<div class="source">
+         <div class="source-name">${esc(name)}</div>
+         <div class="source-msg"></div>
+         <div class="source-actions"><a class="source-link" target="_blank" rel="noopener" href="${esc(url)}">OPEN ↗</a></div>
+       </div>`).join('')}
+     </div>
+   </details>`;
+ });
+ $('amazonLinks').innerHTML=out;
+ $('amazonStatus').innerHTML='';
+ updateConditionalSections();
+}
 async function inspectISBN(isbn){
+  const scanStatus = document.getElementById("scanStatus");
+  if (scanStatus) scanStatus.textContent = "Searching databases...";
+
+  showInstitutions();
  $('isbnDisplay').textContent=isbn;
- $('summary').innerHTML='<span class="badge wait">GLOBAL QUERY IN PROGRESS</span>';
+ renderCommercialDiscovery(isbn);
+ $('exactNotice').textContent='EXACT ISBN PASSED TO LOOKUP: '+isbn;
+ $('summary').innerHTML='<span class="badge wait">QUERYING</span>';
  $('book').innerHTML='';
  $('consensus').innerHTML='';
- setSources(SOURCES.map(s=>sourceRow(s.name,'QUERYING','Waiting for response',linkFor(s.id,isbn))));
+ $('diagnostic').textContent='';
+ const apiSources=SOURCES.filter(s=>s.type==='api');
+ setSources(apiSources.map(s=>sourceRow(s.name,'QUERYING','',linkFor(s.id,isbn))));
  const jobs=[
-  queryOpen(isbn),queryGoogle(isbn),queryBnF(isbn),queryLOC(isbn),queryDNB(isbn)
+  queryOpen(isbn),queryGoogle(isbn),queryBnF(isbn),queryLOC(isbn),
+  queryDNB(isbn),queryCrossref(isbn),queryArchive(isbn),queryWikidata(isbn)
  ];
  const results=await Promise.all(jobs);
  const valid=results.filter(Boolean);
- const links=SOURCES.filter(s=>s.type==='link').map(s=>sourceRow(s.name,'SEARCH LINK','Direct ISBN search',linkFor(s.id,isbn)));
- const apiSources=SOURCES.filter(s=>s.type==='api');
- const all=results.map((r,i)=>r?sourceRow(r.source,'FOUND',r.note||'Bibliographic record found',r.url||''):sourceRow(apiSources[i].name,'NO MATCH','No direct record returned',linkFor(apiSources[i].id,isbn)));
- setSources([...all,...links]);
+ const links=SOURCES.filter(s=>s.type==='link').map(s=>sourceRow(s.name,'SEARCH LINK','',linkFor(s.id,isbn)));
+
  if(valid.length){
    renderBook(merge(valid),valid);
- }else{
-   $('summary').innerHTML='<span class="badge warn">NO DIRECT RECORD</span> The ISBN passed checksum validation, but no direct endpoint returned a record. Use the source links below — and check the browser/network status shown in each row.';
+   const extra=links;
+   setSources(results.map((r,i)=>r?sourceRow(r.source,'FOUND',r.note||'Bibliographic record found',r.url||''):sourceRow(apiSources[i].name,'NO MATCH','No exact direct record',linkFor(apiSources[i].id,isbn))).concat(extra));
+   scanStatus.textContent='INSPECTION COMPLETE — '+valid.length+' DIRECT RECORD(S)';
+   $('diagnostic').textContent='Exact/direct records found. The accepted ISBN is '+isbn+'.';
+   return;
  }
- scanStatus.textContent='INSPECTION COMPLETE — '+valid.length+' DIRECT RECORD(S) / '+links.length+' SEARCH LINKS';
- $('diagnostic').textContent='Direct queries: '+valid.length+' found. If this remains 0 for a known ISBN, the browser is blocking one or more external requests (CORS/network), not the ISBN itself.';
+
+ $('summary').innerHTML='<span class="badge warn">NO EXACT RECORD</span> DISCOVERY';
+ const discovered=await discoveryPhase(isbn);
+
+ if(discovered.length){
+   const exact=discovered.filter(x=>x.exact);
+   renderDiscovery(discovered,isbn);
+   const rows=apiSources.map(s=>sourceRow(s.name,'NO MATCH','',linkFor(s.id,isbn)));
+   rows.push(...discovered.map(r=>sourceRow(r.source,r.exact?'FOUND':'CANDIDATE',r.note,r.url)));
+   rows.push(...links);
+   setSources(rows);
+   scanStatus.textContent='DISCOVERY COMPLETE — '+discovered.length+' POSSIBLE RECORD(S)';
+   $('diagnostic').textContent=exact.length
+    ? 'An exact ISBN match was found during discovery.'
+    : 'The ISBN is valid but direct edition records were absent; discovery found bibliographic candidates. The ISBN was not altered.';
+ }else{
+   $('summary').innerHTML='<span class="badge warn">ISBN VERIFIED / NO RECORD</span>';
+   $('book').innerHTML='<div class="meta" style="margin-top:12px">No bibliographic record returned.</div>';
+   $('consensus').innerHTML='<div class="consensus"><div class="kicker">Coverage result</div><strong>0 bibliographic records</strong></div>';
+   setSources(apiSources.map(s=>sourceRow(s.name,'NO MATCH','',linkFor(s.id,isbn))).concat(links));
+   scanStatus.textContent='NO BIBLIOGRAPHIC RECORDS – Please check out the platforms and libraries...';
+   $('diagnostic').textContent='Important: '+isbn+' was accepted exactly. No automatic replacement or correction occurred.';
+ }
 }
 function linkFor(id,isbn){
- const map={google:googleUrl,bnf:bnfUrl,dnb:dnbUrl,crossref:()=>`https://search.crossref.org/?q=${encodeURIComponent(isbn)}`,archive:()=>`https://archive.org/advancedsearch.php?q=${encodeURIComponent('isbn:'+isbn)}&fl[]=identifier,title,creator,year&output=json`,wikidata:()=>`https://www.wikidata.org/w/index.php?search=${encodeURIComponent(isbn)}`,sbn:sbnUrl,worldcat:worldcatUrl,amazon:amazonUrl,trove:()=>`https://trove.nla.gov.au/search/category/books?keyword=${encodeURIComponent(isbn)}`,bne:()=>`https://catalogo.bne.es/discovery/search?query=any,contains,${encodeURIComponent(isbn)}`,loc:()=>`https://www.loc.gov/books/?q=${encodeURIComponent(isbn)}`,open:()=>`https://openlibrary.org/isbn/${encodeURIComponent(isbn)}`};
+ const map={google:googleUrl,bnf:bnfUrl,dnb:dnbUrl,crossref:()=>`https://search.crossref.org/?q=${encodeURIComponent(isbn)}`,archive:()=>`https://archive.org/advancedsearch.php?q=${encodeURIComponent('isbn:'+isbn)}&fl[]=identifier,title,creator,year&output=json`,wikidata:()=>`https://www.wikidata.org/w/index.php?search=${encodeURIComponent(isbn)}`,sbn:sbnUrl,worldcat:worldcatUrl,amazon:()=>amazonUrl(isbn,'www.amazon.it'),isbnsearch:isbnSearchUrl,goodreads:goodreadsUrl,trove:()=>`https://trove.nla.gov.au/search/category/books?keyword=${encodeURIComponent(isbn)}`,bne:()=>`https://catalogo.bne.es/discovery/search?query=any,contains,${encodeURIComponent(isbn)}`,loc:()=>`https://www.loc.gov/books/?q=${encodeURIComponent(isbn)}`,open:()=>`https://openlibrary.org/isbn/${encodeURIComponent(isbn)}`};
  return map[id]?map[id](isbn):'';
 }
+function cleanDescription(v){
+ if(!v) return '';
+ if(typeof v==='string') return v.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+ if(typeof v==='object') return String(v.value||v.text||v.description||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+ return '';
+}
+function normalizeSubjects(v){
+ if(!Array.isArray(v)) return [];
+ return v.map(x=>typeof x==='string'?x:(x?.name||x?.value||'')).filter(Boolean).slice(0,12);
+}
+function normalizeLanguages(v){
+ if(!Array.isArray(v)) return '';
+ const map={
+  'ita':'Italian','it':'Italian',
+  'eng':'English','en':'English',
+  'deu':'German','ger':'German','de':'German',
+  'fra':'French','fre':'French','fr':'French',
+  'spa':'Spanish','es':'Spanish',
+  'por':'Portuguese','pt':'Portuguese',
+  'nld':'Dutch','dut':'Dutch','nl':'Dutch',
+  'swe':'Swedish','sv':'Swedish',
+  'dan':'Danish','da':'Danish',
+  'nor':'Norwegian','no':'Norwegian',
+  'fin':'Finnish','fi':'Finnish',
+  'pol':'Polish','pl':'Polish',
+  'ces':'Czech','cze':'Czech','cs':'Czech',
+  'slv':'Slovenian','sl':'Slovenian',
+  'hrv':'Croatian','hr':'Croatian',
+  'hun':'Hungarian','hu':'Hungarian',
+  'ron':'Romanian','ro':'Romanian',
+  'rus':'Russian','ru':'Russian',
+  'ukr':'Ukrainian','uk':'Ukrainian',
+  'jpn':'Japanese','ja':'Japanese',
+  'kor':'Korean','ko':'Korean',
+  'zho':'Chinese','chi':'Chinese','zh':'Chinese',
+  'ara':'Arabic','ar':'Arabic',
+  'heb':'Hebrew','he':'Hebrew',
+  'hin':'Hindi','hi':'Hindi',
+  'tur':'Turkish','tr':'Turkish',
+  'gre':'Greek','ell':'Greek','el':'Greek',
+  'lat':'Latin',
+  'und':'Undetermined'
+ };
+ return [...new Set(v.map(x=>{
+   const raw=typeof x==='string' ? x : (x?.key||x?.name||'');
+   const key=raw.split('/').pop().toLowerCase();
+   return map[key] || raw.replace(/^\/languages\//i,'').replace(/^\w{2,3}[-_]/,'').trim();
+ }).filter(Boolean))].join(', ');
+}
+function bestValue(rs,key){
+ const vals=rs.map(r=>r[key]).filter(v=>v!==undefined&&v!==null&&v!=='');
+ return vals[0]||'';
+}
+
 async function queryOpen(isbn){
  try{
   let d=null;
@@ -338,10 +1029,17 @@ async function queryOpen(isbn){
   return {
    source:'OPEN LIBRARY',
    title:d.title,
+   subtitle:d.subtitle,
    authors:authors.map(a=>a.name||a.key).join(', '),
    publisher:publishers.map(p=>p.name||p).join(', '),
    date:d.publish_date,
    pages:d.number_of_pages||d.number_of_pages_median,
+   description:cleanDescription(d.description),
+   subjects:normalizeSubjects(d.subjects),
+   format:d.physical_format,
+   edition:d.edition_name,
+   language:normalizeLanguages(d.languages),
+   dimensions:[d.physical_dimensions,d.weight].filter(Boolean).join(' · '),
    cover:d.cover?.medium||d.cover?.large||d.covers?.[0]&&('https://covers.openlibrary.org/b/id/'+d.covers[0]+'-M.jpg'),
    url:d.url||linkFor('open',isbn),
    note:'Edition record'
@@ -350,19 +1048,30 @@ async function queryOpen(isbn){
 }
 async function queryGoogle(isbn){
  try{
-  const candidates=[isbn];
-  if(isbn.startsWith('978')||isbn.startsWith('979')) candidates.push(toISBN10(isbn));
-  let item=null;
-  for(const id of candidates){
-   try{
-    const j=await fetch('https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('isbn:'+id)+'&maxResults=10').then(r=>r.ok?r.json():null);
-    item=(j?.items||[]).find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=>i.identifier.replace(/-/g,'')===id))||(j?.items||[])[0];
-    if(item)break;
-   }catch{}
-  }
+  const u='https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent('isbn:'+isbn)+'&maxResults=10';
+  const j=await fetch(u).then(r=>r.ok?r.json():null);
+  const items=j?.items||[];
+  const exact=items.find(x=>(x.volumeInfo?.industryIdentifiers||[]).some(i=>i.identifier.replace(/-/g,'')===isbn));
+  const item=exact||items[0];
   if(!item)return null;
   const v=item.volumeInfo||{};
-  return {source:'GOOGLE BOOKS',title:[v.title,v.subtitle].filter(Boolean).join(': '),authors:(v.authors||[]).join(', '),publisher:v.publisher,date:v.publishedDate,pages:v.pageCount,cover:v.imageLinks?.thumbnail?.replace('http:','https:'),url:v.infoLink||googleUrl(isbn),note:'Volume record'};
+  return {
+   source:'GOOGLE BOOKS',
+   title:v.title,
+   subtitle:v.subtitle,
+   authors:(v.authors||[]).join(', '),
+   publisher:v.publisher,
+   date:v.publishedDate,
+   pages:v.pageCount,
+   description:cleanDescription(v.description),
+   subjects:v.categories||[],
+   format:v.printType,
+   language:v.language,
+   dimensions:[v.dimensions?.height,v.dimensions?.width,v.dimensions?.thickness].filter(Boolean).join(' × ') || '',
+   cover:v.imageLinks?.extraLarge||v.imageLinks?.large||v.imageLinks?.medium||v.imageLinks?.thumbnail?.replace('http:','https:'),
+   url:v.infoLink||googleUrl(isbn),
+   note:exact?'Exact ISBN match':'ISBN query result — edition match should be verified'
+  };
  }catch{return null}
 }
 function toISBN10(isbn13){
@@ -412,7 +1121,7 @@ async function queryCrossref(isbn){
   const j=await fetch(u,{headers:{'Accept':'application/json'}}).then(r=>r.json());
   const item=(j.message?.items||[])[0];
   if(!item)return null;
-  return {source:'CROSSREF',title:item.title?.[0],authors:(item.author||[]).map(a=>[a.given,a.family].filter(Boolean).join(' ')).join(', '),publisher:item.publisher,date:item.published?.['date-parts']?.[0]?.join('-'),pages:item.page, url:item.URL||'https://search.crossref.org/?q='+encodeURIComponent(isbn),note:'ISBN-filtered DOI metadata'};
+  return {source:'CROSSREF',title:item.title?.[0],authors:(item.author||[]).map(a=>[a.given,a.family].filter(Boolean).join(' ')).join(', '),publisher:item.publisher,date:item.published?.['date-parts']?.[0]?.join('-'),pages:item.page,description:cleanDescription(item.abstract),url:item.URL||'https://search.crossref.org/?q='+encodeURIComponent(isbn),note:'ISBN-filtered DOI metadata'};
  }catch{return null}
 }
 async function queryArchive(isbn){
@@ -421,7 +1130,7 @@ async function queryArchive(isbn){
   const j=await fetch(u).then(r=>r.json());
   const d=(j.response?.docs||[])[0];
   if(!d)return null;
-  return {source:'INTERNET ARCHIVE',title:d.title,authors:Array.isArray(d.creator)?d.creator.join(', '):d.creator,date:d.year,url:'https://archive.org/details/'+encodeURIComponent(d.identifier),note:'Archive search record'};
+  return {source:'INTERNET ARCHIVE',title:d.title,authors:Array.isArray(d.creator)?d.creator.join(', '):d.creator,date:d.year,description:cleanDescription(d.description),url:'https://archive.org/details/'+encodeURIComponent(d.identifier),note:'Archive search record'};
  }catch{return null}
 }
 async function queryWikidata(isbn){
@@ -441,26 +1150,99 @@ async function queryWikidata(isbn){
  }
  catch{return null}
 }
+
+function renderDiscovery(rs,isbn){
+ const best=rs[0];
+ $('summary').innerHTML=`<span class="badge ${best.exact?'ok':'warn'}">${best.exact?'EXACT DISCOVERY MATCH':'BIBLIOGRAPHIC DISCOVERY'}</span> <span class="badge">${rs.length} CANDIDATE${rs.length===1?'':'S'}</span>`;
+ $('book').innerHTML=`
+  <div class="booktop">
+   ${best.cover?`<img class="cover" src="${esc(best.cover)}" alt="Book cover">`:''}
+   <div>
+    <div class="title">${esc(best.title||'Title unavailable')}</div>
+    ${best.subtitle?`<div class="meta">${esc(best.subtitle)}</div>`:''}
+    <div class="meta">${esc(best.authors||'Author unavailable')}</div>
+   </div>
+  </div>
+  <div class="fields">
+   <div class="field"><div class="label">Scanned ISBN</div><div class="value">${esc(isbn)}</div></div>
+   <div class="field"><div class="label">Publisher</div><div class="value">${esc(best.publisher||'—')}</div></div>
+   <div class="field"><div class="label">Publication</div><div class="value">${esc(best.date||'—')}</div></div>
+   <div class="field"><div class="label">Pages</div><div class="value">${esc(best.pages||'—')}</div></div>
+  </div>
+  ${best.subjects?.length?`<div class="book-description"><div class="label">Subjects</div><div class="book-subjects">${best.subjects.map(s=>`<span class="subject">${esc(s)}</span>`).join('')}</div></div>`:''}
+  ${best.description?`<div class="book-description"><div class="label">Synopsis</div><div class="book-description-text">${esc(best.description)}</div></div>`:''}
+ `;
+ $('consensus').innerHTML=`<div class="consensus"><div class="kicker">Discovery status</div><strong>${best.exact?'ISBN MATCH FOUND':'Candidate record found'}</strong></div>`;
+ updateConditionalSections();
+}
 function merge(rs){
- const get=k=>rs.map(r=>r[k]).find(Boolean);
- const title=get('title'),authors=get('authors'),publisher=get('publisher'),date=get('date'),pages=get('pages'),cover=get('cover');
+ const get=k=>rs.map(r=>r[k]).find(v=>v!==undefined&&v!==null&&v!=='');
+ const descriptions=rs.map(r=>r.description).filter(Boolean).sort((a,b)=>b.length-a.length);
+ const subjectList=[...new Set(rs.flatMap(r=>Array.isArray(r.subjects)?r.subjects:[]))].slice(0,14);
+ const title=get('title'),subtitle=get('subtitle'),authors=get('authors'),publisher=get('publisher'),date=get('date'),pages=get('pages'),cover=get('cover');
  const conflicts=[];
  for(const k of ['title','authors','publisher','date','pages']){
   const vals=[...new Set(rs.map(r=>r[k]).filter(v=>v!==undefined&&v!==null&&v!==''))];
   if(vals.length>1)conflicts.push([k,vals]);
  }
- return {title,authors,publisher,date,pages,cover,conflicts};
+ return {
+  title,subtitle,authors,publisher,date,pages,cover,
+  description:descriptions[0]||'',
+  subjects:subjectList,
+  format:get('format'),
+  edition:get('edition'),
+  language:get('language'),
+  dimensions:get('dimensions'),
+  conflicts
+ };
 }
 function renderBook(m,rs){
  $('summary').innerHTML=`<span class="badge ok">IDENTITY CONFIRMED</span> <span class="badge ok">${rs.length} DIRECT SOURCE${rs.length===1?'':'S'}</span>`;
- $('book').innerHTML=`<div class="booktop">${m.cover?`<img class="cover" src="${esc(m.cover)}" alt="">`:''}<div><div class="title">${esc(m.title||'Title unavailable')}</div><div class="meta">${esc(m.authors||'Author unavailable')}</div></div></div>
- <div class="fields">${[['ISBN', $('isbnDisplay').textContent],['Publisher',m.publisher],['Publication',m.date],['Pages',m.pages],['Sources',rs.length+' direct records'],['Edition confidence',m.conflicts.length?'CONFLICT':'HIGH']].map(([a,b])=>`<div class="field"><div class="label">${esc(a)}</div><div class="value">${esc(b||'—')}</div></div>`).join('')}</div>`;
+ const fields=[
+  ['ISBN',$('isbnDisplay').textContent],
+  ['Publisher',m.publisher],
+  ['Publication',m.date],
+  ['Pages',m.pages],
+  ['Format',m.format],
+  ['Language',m.language],
+  ['Edition',m.edition],
+  ['Dimensions',m.dimensions]
+ ];
+ $('book').innerHTML=`
+  <div class="booktop">
+   ${m.cover?`<img class="cover" src="${esc(m.cover)}" alt="Book cover">`:''}
+   <div>
+    <div class="title">${esc(m.title||'Title unavailable')}</div>
+    ${m.subtitle?`<div class="meta">${esc(m.subtitle)}</div>`:''}
+    <div class="meta">${esc(m.authors||'Author unavailable')}</div>
+   </div>
+  </div>
+  <div class="fields">
+   ${fields.map(([a,b])=>`<div class="field"><div class="label">${esc(a)}</div><div class="value">${esc(b||'—')}</div></div>`).join('')}
+   <div class="field"><div class="label">Sources</div><div class="value">${rs.length} direct records</div></div>
+   <div class="field"><div class="label">Edition confidence</div><div class="value">${m.conflicts.length?'CONFLICT':'HIGH'}</div></div>
+  </div>
+  ${m.subjects.length?`<div class="book-description"><div class="label">Subjects</div><div class="book-subjects">${m.subjects.map(s=>`<span class="subject">${esc(s)}</span>`).join('')}</div></div>`:''}
+  ${m.description?`<div class="book-description"><div class="label">Synopsis</div><div class="book-description-text">${esc(m.description)}</div></div>`:''}
+ `;
+
  const score=Math.round((rs.length/SOURCES.filter(s=>s.type==='api').length)*100);
  let h=`<div class="consensus"><div class="kicker">Source consensus</div><strong>${score}% direct-source coverage</strong>`;
- if(m.conflicts.length){h+=`<div class="conflict"><b>⚠ BIBLIOGRAPHIC CONFLICT</b><br>${m.conflicts.map(c=>esc(c[0])+': '+c[1].map(esc).join(' / ')).join('<br>')}</div>`}
- else h+='<div class="meta">No conflicting core fields detected among returned records.</div>';
- h+='</div>';$('consensus').innerHTML=h;
+ if(m.conflicts.length){
+   h+=`<div class="conflict"><b>BIBLIOGRAPHIC CONFLICT</b><br>${m.conflicts.map(c=>esc(c[0])+': '+c[1].map(esc).join(' / ')).join('<br>')}</div>`;
+ }else{
+   h+='<div class="meta">No conflicting core fields.</div>';
+ }
+ h+='</div>';
+ $('consensus').innerHTML=h;
+ updateConditionalSections();
 }
 </script>
+
+<footer class="sacrisoft-footer">
+  <span>© <span id="copyrightYear"></span></span>
+  <img src="./images/logo.png" alt="Sacrisoft">
+  <span>Sacrisoft</span>
+</footer>
 </body>
 </html>
