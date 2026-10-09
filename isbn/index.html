@@ -97,23 +97,33 @@ a{color:#ff5000}
 }
 
 /* SOURCE RESULT DISPLAY */
-.source-result-cover{width:34px;height:48px;object-fit:cover;flex:0 0 auto;border:1px solid rgba(0,0,0,.12);}
-.source-result{min-width:0;flex:1;}
-.source-result-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.source-result-meta{font-size:.78rem;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.source-msg{font-size:.72rem;opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.source-result-cover{width:42px;height:60px;object-fit:cover;flex:0 0 auto;border:1px solid rgba(0,0,0,.12);grid-row:1 / span 2;grid-column:1;align-self:center}
+.source-result{min-width:0;grid-column:1;grid-row:2;padding-top:4px}
+.source-name{grid-column:1;grid-row:1}
+.source-result-title{font-weight:700;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+.source-result-meta{font-size:.88rem;opacity:.72;white-space:normal;overflow-wrap:anywhere;line-height:1.3;margin-top:2px}
+.source-msg{font-size:.72rem;opacity:.62;white-space:normal;overflow-wrap:anywhere}
+.source:has(.source-result-cover){grid-template-columns:42px minmax(0,1fr) auto;column-gap:10px}
+.source:has(.source-result-cover) .source-name{grid-column:2;grid-row:1}
+.source:has(.source-result-cover) .source-result{grid-column:2;grid-row:2}
+.source:has(.source-result-cover) .source-result-cover{grid-column:1;grid-row:1 / span 2}
+.source:has(.source-result-cover) .source-actions{grid-column:3;grid-row:1 / span 2}
 
 /* BLACK STOP BUTTON */
 #stop{background:#111!important;color:#fff!important;border-color:#111!important;}
 #stop:hover:not(:disabled){background:#111!important;color:#fff!important;border-color:#111!important;}
 
-/* Country-aware fallback highlighting */
-.institution-card.preferred-country{outline:2px solid #111;box-shadow:inset 0 0 0 2px #111;background:#f5f5f5}
+/* Country-aware recommendation: soft animated spectrum, no heavy black frame */
+:root{--recommendation-spectrum:linear-gradient(105deg,rgba(255,117,163,.42),rgba(255,221,116,.42),rgba(159,242,174,.42),rgba(128,218,255,.42),rgba(221,165,255,.42),rgba(255,117,163,.42))}
+.institution-card.preferred-country,.platform-priority{position:relative;background:var(--recommendation-spectrum)!important;background-size:260% 100%!important;animation:recommendationRainbow 7s ease-in-out infinite;border-radius:0;outline:0!important;box-shadow:none!important;border:1px solid rgba(17,17,17,.12)!important}
+.institution-card.preferred-country{border-radius:12px;margin:5px;padding:12px 14px}
 .institution-card.preferred-country .institution-region{font-weight:900}
-.institution-card.preferred-country:before{content:'RECOMMENDED';display:block;font-size:9px;font-weight:900;letter-spacing:.08em;margin-bottom:6px}
-.platform-priority{font-weight:900;background:#f5f5f5}
+.institution-card.preferred-country:before{content:'RECOMMENDED';display:inline-block;font-size:9px;font-weight:900;letter-spacing:.08em;margin:0 0 7px;padding:4px 8px;border-radius:999px;background:linear-gradient(90deg,#ff5ba7,#ffb34d);color:#fff}
+.platform-priority{font-weight:900;border-radius:10px!important;padding-left:10px!important;padding-right:10px!important}
 .platform-priority .source-msg:before{content:'PRIORITY';font-weight:900;margin-right:8px}
-@media(max-width:480px){.institution-card.preferred-country:before{font-size:8px}}
+@keyframes recommendationRainbow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@media(max-width:520px){.source{grid-template-columns:minmax(0,1fr) auto;gap:8px}.source:has(.source-result-cover){grid-template-columns:38px minmax(0,1fr) auto;column-gap:8px}.source-result-cover{width:38px;height:54px}.source-actions{min-width:auto}.source-link{font-size:9px}.institution-card.preferred-country:before{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.institution-card.preferred-country,.platform-priority{animation:none}}
 </style>
 
 <style id="source-results-fix">
@@ -452,6 +462,25 @@ a{color:#ff5000}
 }
 </style>
 
+
+<style id="final-recommendation-layout-fix">
+/* Final layout overrides: source name on line one, record details on line two. */
+#sources .source{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:12px;row-gap:3px;align-items:center}
+#sources .source .source-name{grid-column:1;grid-row:1;min-width:0}
+#sources .source .source-result{grid-column:1;grid-row:2;min-width:0}
+#sources .source .source-msg{grid-column:1;grid-row:3}
+#sources .source .source-actions{grid-column:2;grid-row:1 / span 3;min-width:auto}
+#sources .source:has(.source-result-cover){grid-template-columns:42px minmax(0,1fr) auto}
+#sources .source:has(.source-result-cover) .source-result-cover{grid-column:1;grid-row:1 / span 3}
+#sources .source:has(.source-result-cover) .source-name{grid-column:2;grid-row:1}
+#sources .source:has(.source-result-cover) .source-result{grid-column:2;grid-row:2}
+#sources .source:has(.source-result-cover) .source-msg{grid-column:2;grid-row:3}
+#sources .source:has(.source-result-cover) .source-actions{grid-column:3;grid-row:1 / span 3}
+#sources .source-result-title,#sources .source-result-meta{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:520px){#sources .source:has(.source-result-cover){grid-template-columns:38px minmax(0,1fr) auto}}
+@media(prefers-reduced-motion:reduce){.institution-card.preferred-country,.platform-priority{animation:none!important}}
+</style>
+
 </head>
 <body>
 <header><div class="rainbow"></div></header>
@@ -474,7 +503,7 @@ a{color:#ff5000}
     <button class="btn" id="stop" disabled>STOP</button>
   </div>
   <div class="manual">
-    <input id="isbnInput" placeholder="ENTER ISBN-10 / ISBN-13">
+    <input id="isbnInput" placeholder="ISBN-10 / ISBN-13">
     <button class="btn" id="inspect">INSPECT</button>
   </div>
   <div class="status" id="scanStatus">READY</div>
@@ -560,7 +589,7 @@ const REGIONS=[
  ['CZECHIA',['National Library / SKC','https://www.nkp.cz/']],
  ['DENMARK',['Royal Danish Library','https://soeg.kb.dk/']],
  ['FINLAND',['Finna / National Library','https://www.finna.fi/']],
- ['FRANCE',['BnF Catalogue','https://catalogue.bnf.fr/'],['data.bnf.fr','https://data.bnf.fr/']],
+ ['FRANCE',['BnF Catalogue','https://catalogue.bnf.fr/'],['BnF Linked Data (data.bnf.fr)','https://data.bnf.fr/']],
  ['GERMANY',['Deutsche Nationalbibliothek','https://portal.dnb.de/']],
  ['INDIA',['National Library / INFLIBNET','https://www.nationallibrary.gov.in/']],
  ['ITALY',['SBN / OPAC SBN','https://opac.sbn.it/']],
@@ -573,7 +602,7 @@ const REGIONS=[
  ['PORTUGAL',['Biblioteca Nacional / PORBASE','https://porbase.bnportugal.gov.pt/']],
  ['SLOVENIA',['COBISS.SI','https://plus.cobiss.net/cobiss/si/en/bib/search']],
  ['SOUTH KOREA',['National Library of Korea','https://www.nl.go.kr/']],
- ['SPAIN',['Biblioteca Nacional de España','https://catalogo.bne.es/'],['datos.bne.es','https://datos.bne.es/']],
+ ['SPAIN',['Biblioteca Nacional de España','https://catalogo.bne.es/'],['BNE Linked Data (datos.bne.es)','https://datos.bne.es/']],
  ['SWEDEN',['LIBRIS','https://libris.kb.se/']],
  ['SWITZERLAND',['Helveticat','https://www.helveticat.ch/']],
  ['UK / IRELAND',['British Library / BNB','https://explore.bl.uk/']],
@@ -595,7 +624,7 @@ function renderInstitutions(preferredCountry=''){
    const links=r.slice(1);
    return `<div class="institution-card${preferred?' preferred-country':''}">
      <div class="institution-region">${region}</div>
-     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(i?'OPEN ↗︎':x[0])}</a>`).join('')}
+     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])} ↗</a>`).join('')}
    </div>`;
  }).join('');
 }
@@ -655,9 +684,9 @@ function sourceRow(name,state,msg='',link='',record=null){
  const authors=record?.authors||'';
  const publisher=record?.publisher||'';
  const detail=[authors,publisher].filter(Boolean).join(' · ');
- return `<div class="source" data-group="${esc(group)}">
-   <div class="source-name">${esc(name)}</div>
+ return `<div class="source${record?.cover?' has-cover':''}" data-group="${esc(group)}">
    ${record?.cover?`<img class="source-result-cover" src="${esc(record.cover)}" alt="" loading="lazy">`:''}
+   <div class="source-name">${esc(name)}</div>
    <div class="source-result">
      ${title?`<div class="source-result-title">${esc(title)}</div>`:''}
      ${detail?`<div class="source-result-meta">${esc(detail)}</div>`:''}
@@ -1518,3 +1547,58 @@ function renderBook(m,rs){
 </footer>
 </body>
 </html>
+<style id="recommendation-highlight-inset-fix">
+/* Keep recommendation fills safely inside their existing grid cells and row rules. */
+.institutions-grid .institution-card.preferred-country{
+  position:relative;
+  z-index:0;
+  isolation:isolate;
+  margin:0!important;
+  padding:11px 13px 12px!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  border-right:1px solid #bbb!important;
+  border-bottom:1px solid #bbb!important;
+  background:#fffdf8!important;
+  animation:none!important;
+}
+.institutions-grid .institution-card.preferred-country::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:5px;
+  display:block;
+  margin:0;
+  padding:0;
+  border:1px solid rgba(17,17,17,.08);
+  border-radius:9px;
+  background:linear-gradient(105deg,rgba(255,117,163,.38),rgba(255,221,116,.38),rgba(159,242,174,.38),rgba(128,218,255,.38),rgba(221,165,255,.38),rgba(255,117,163,.38));
+  background-size:260% 100%;
+  animation:recommendationRainbow 7s ease-in-out infinite;
+  pointer-events:none;
+}
+.institutions-grid .institution-card.preferred-country > *{position:relative;z-index:1}
+.institutions-grid .institution-card.preferred-country .institution-region{margin-top:0}
+/* Use a compact inset highlight on priority retailers; don't touch the group dividers. */
+#amazonLinks .source.platform-priority{
+  box-sizing:border-box;
+  margin:4px 0!important;
+  padding:8px 10px!important;
+  width:100%;
+  border:1px solid rgba(17,17,17,.08)!important;
+  border-radius:10px!important;
+  background:linear-gradient(105deg,rgba(255,117,163,.38),rgba(255,221,116,.38),rgba(159,242,174,.38),rgba(128,218,255,.38),rgba(221,165,255,.38),rgba(255,117,163,.38))!important;
+  background-size:260% 100%!important;
+  animation:recommendationRainbow 7s ease-in-out infinite;
+  box-shadow:none!important;
+}
+@media(max-width:480px){
+  .institutions-grid .institution-card.preferred-country::before{inset:4px}
+  #amazonLinks .source.platform-priority{margin:3px 0!important;padding:7px 8px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .institutions-grid .institution-card.preferred-country::before,
+  #amazonLinks .source.platform-priority{animation:none!important}
+}
+</style>
