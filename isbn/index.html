@@ -624,7 +624,7 @@ function renderInstitutions(preferredCountry=''){
    const links=r.slice(1);
    return `<div class="institution-card${preferred?' preferred-country':''}">
      <div class="institution-region">${region}</div>
-     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])} ↗</a>`).join('')}
+     ${links.map((x,i)=>`<a class="institution-link ${i?'secondary':''}" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])} ↗︎</a>`).join('')}
    </div>`;
  }).join('');
 }
