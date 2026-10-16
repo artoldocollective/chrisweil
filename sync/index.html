@@ -570,442 +570,52 @@ createConnection();
 
 
 <script>
-
 // =================================
 // RETRO COMPUTER DUNGEON ENGINE
-// LEVEL 01
+// EXPANDED PUZZLE CAMPAIGN
 // =================================
+const canvas=document.getElementById("screen");
+const ctx=canvas.getContext("2d");
+canvas.width=320; canvas.height=180; ctx.imageSmoothingEnabled=false;
 
+const player={x:24,y:88,size:10,speed:2,hp:3};
+let input={}, level=0, keys=0, message="", messageTimer=0, fireCooldown=0;
+let bullets=[], enemyBullets=[], particles=[];
 
-const canvas =
-document.getElementById("screen");
+function gameInput(command){ input[command]=true; setTimeout(()=>input[command]=false,100); }
 
-
-const ctx =
-canvas.getContext("2d");
-
-
-
-canvas.width=320;
-canvas.height=180;
-
-
-ctx.imageSmoothingEnabled=false;
-
-
-
-
-// -------------------------------
-// PLAYER
-// -------------------------------
-
-
-const player={
-
-x:40,
-
-y:90,
-
-size:12,
-
-speed:2
-
-};
-
-
-
-
-
-// -------------------------------
-// INPUT FROM PHONE
-// -------------------------------
-
-
-let input={};
-
-
-
-function gameInput(command){
-
-input[command]=true;
-
-
-setTimeout(()=>{
-
-input[command]=false;
-
-},100);
-
-
-}
-
-
-
-
-
-// -------------------------------
-// LEVEL SYSTEM
-// -------------------------------
-
-
-let level=0;
-
-
-
+const R=(x,y,w,h)=>({x,y,w,h});
 const levels=[
-
-
-{
-
-name:"BOOT SECTOR",
-
-portal:{
-x:280,
-y:150,
-size:20
-}
-
-},
-
-
-
-{
-
-name:"BIOS CHAMBER",
-
-portal:{
-x:40,
-y:40,
-size:20
-}
-
-},
-
-
-
-{
-
-name:"RAM FOREST",
-
-portal:{
-x:280,
-y:40,
-size:20
-}
-
-}
-
-
+ {name:"BOOT SECTOR",start:[22,88],portal:R(284,144,18,18),walls:[R(80,25,8,105),R(160,50,8,110),R(235,20,8,105)],keys:[{x:116,y:36}],doors:[R(235,125,8,38)],enemies:[{x:120,y:125,type:"patrol",axis:"x",range:35}],hint:"FIND THE KEY // UNLOCK EXIT"},
+ {name:"BIOS CHAMBER",start:[285,145],portal:R(18,18,18,18),walls:[R(55,0,8,118),R(55,145,8,35),R(110,62,100,8),R(205,62,8,98),R(260,20,8,105)],keys:[{x:230,y:28}],doors:[R(55,118,8,27)],enemies:[{x:150,y:100,type:"patrol",axis:"y",range:38},{x:278,y:48,type:"turret"}],hint:"A FIRES // TURRETS GUARD BIOS"},
+ {name:"RAM FOREST",start:[20,145],portal:R(282,18,18,18),walls:[R(45,30,70,8),R(45,30,8,80),R(95,75,8,80),R(145,20,8,115),R(195,55,8,105),R(245,20,8,110)],keys:[{x:68,y:58},{x:218,y:145}],doors:[R(245,130,8,30)],enemies:[{x:120,y:150,type:"chase"},{x:220,y:80,type:"patrol",axis:"y",range:35}],hidden:[{x:110,y:18,w:18,h:18,to:[275,145]}],hint:"2 KEYS // A HIDDEN WARP EXISTS"},
+ {name:"CACHE MAZE",start:[18,18],portal:R(286,146,18,18),walls:[R(40,0,8,140),R(80,40,8,140),R(120,0,8,140),R(160,40,8,140),R(200,0,8,140),R(240,40,8,140),R(280,0,8,110)],keys:[{x:58,y:155}],doors:[R(280,110,8,34)],enemies:[{x:58,y:65,type:"patrol",axis:"y",range:45},{x:180,y:25,type:"patrol",axis:"y",range:35},{x:260,y:145,type:"turret"}],hint:"MEMORY CORRIDORS // BREAK THE GUARD"},
+ {name:"FIREWALL VAULT",start:[18,88],portal:R(286,80,18,18),walls:[R(60,20,8,140),R(115,0,8,110),R(115,140,8,40),R(170,45,8,135),R(225,0,8,120)],keys:[{x:88,y:25},{x:195,y:25}],doors:[R(225,120,8,35)],enemies:[{x:90,y:120,type:"turret"},{x:145,y:80,type:"chase"},{x:255,y:35,type:"turret"}],hint:"DUAL AUTH KEYS // FIREWALL ACTIVE"},
+ {name:"GHOST PROCESS",start:[25,145],portal:R(280,18,18,18),walls:[R(35,105,80,8),R(105,35,8,78),R(105,35,100,8),R(197,35,8,100),R(197,127,70,8)],keys:[{x:145,y:75}],doors:[R(267,127,8,38)],enemies:[{x:55,y:55,type:"chase"},{x:160,y:150,type:"chase"}],hidden:[{x:15,y:15,w:20,h:20,to:[245,105]}],hint:"GHOSTS FOLLOW // SEEK FALSE WALL"},
+ {name:"KERNEL SHAFT",start:[18,150],portal:R(286,10,18,18),walls:[R(45,130,65,8),R(95,95,70,8),R(150,60,70,8),R(205,28,65,8),R(270,28,8,110)],keys:[{x:180,y:45}],doors:[R(270,0,8,28)],enemies:[{x:120,y:75,type:"turret"},{x:225,y:105,type:"patrol",axis:"y",range:45}],hint:"CLIMB THE KERNEL // WATCH CROSS-FIRE"},
+ {name:"NULL ARCHIVE",start:[20,20],portal:R(285,145,18,18),walls:[R(65,20,8,120),R(125,40,8,140),R(185,0,8,120),R(245,40,8,140)],keys:[{x:95,y:150},{x:215,y:20}],doors:[R(245,0,8,40)],enemies:[{x:95,y:70,type:"chase"},{x:155,y:135,type:"turret"},{x:215,y:75,type:"chase"}],hidden:[{x:285,y:15,w:18,h:18,to:[265,150]}],hint:"ARCHIVE CORRUPTED // SECRET INDEX"},
+ {name:"ROOT ACCESS",start:[18,88],portal:R(286,80,18,18),walls:[R(50,20,8,140),R(100,0,8,120),R(150,60,8,120),R(200,0,8,120),R(250,20,8,140)],keys:[{x:75,y:25},{x:125,y:150},{x:225,y:150}],doors:[R(250,75,8,30)],enemies:[{x:75,y:130,type:"turret"},{x:130,y:40,type:"chase"},{x:180,y:145,type:"turret"},{x:225,y:55,type:"chase"}],hint:"3 ROOT KEYS // NO TURNING BACK"},
+ {name:"THE BACKDOOR",start:[18,150],portal:R(286,12,18,18),walls:[R(40,35,230,8),R(40,80,230,8),R(40,125,230,8),R(40,35,8,90),R(262,35,8,90)],keys:[{x:150,y:58},{x:150,y:103}],doors:[R(262,125,8,35)],enemies:[{x:75,y:58,type:"patrol",axis:"x",range:25},{x:225,y:103,type:"patrol",axis:"x",range:25},{x:150,y:150,type:"turret"}],hidden:[{x:285,y:145,w:18,h:18,to:[25,18]}],hint:"FINAL BACKDOOR // PORTALS LIE"}
 ];
 
-
-
-
-
-
-function loadLevel(){
-
-
-player.x=40;
-
-player.y=90;
-
-
-console.log(
-"ENTERING:",
-levels[level].name
-);
-
-
+function hit(a,b){return a.x<b.x+(b.w||b.size)&&a.x+a.size>b.x&&a.y<b.y+(b.h||b.size)&&a.y+a.size>b.y}
+function solidAt(nx,ny){let a={x:nx,y:ny,size:player.size}, L=levels[level]; return L.walls.some(w=>hit(a,w))||L.doors.some(d=>!d.open&&hit(a,d));}
+function loadLevel(){let L=levels[level]; player.x=L.start[0];player.y=L.start[1];player.hp=3;keys=0;bullets=[];enemyBullets=[];L.keys.forEach(k=>k.got=false);L.doors.forEach(d=>d.open=false);L.enemies.forEach((e,i)=>{e.dead=false;e.ox=e.x;e.oy=e.y;e.dir=1;e.cool=40+i*15}); message=L.hint;messageTimer=180;}
+function shoot(){if(fireCooldown>0)return; bullets.push({x:player.x+5,y:player.y+5,vx:4,vy:0,size:3});fireCooldown=14;}
+function resetPlayer(){player.hp--; if(player.hp<=0){message="PROCESS KILLED // REBOOT";messageTimer=90;loadLevel();}else{let s=levels[level].start;player.x=s[0];player.y=s[1];}}
+function update(){let ox=player.x,oy=player.y;if(input.LEFT)player.x-=player.speed;if(input.RIGHT)player.x+=player.speed;if(solidAt(player.x,player.y))player.x=ox;if(input.UP)player.y-=player.speed;if(input.DOWN)player.y+=player.speed;if(solidAt(player.x,player.y))player.y=oy;player.x=Math.max(0,Math.min(310,player.x));player.y=Math.max(0,Math.min(170,player.y));if(input.FIRE)shoot();if(fireCooldown>0)fireCooldown--;if(messageTimer>0)messageTimer--;
+ let L=levels[level]; L.keys.forEach(k=>{if(!k.got&&hit(player,{x:k.x,y:k.y,w:7,h:7})){k.got=true;keys++;message="ACCESS KEY "+keys+"/"+L.keys.length;messageTimer=75;}}); if(keys>=L.keys.length)L.doors.forEach(d=>d.open=true);
+ L.hidden?.forEach(h=>{if(hit(player,h)){player.x=h.to[0];player.y=h.to[1];message="HIDDEN PORTAL";messageTimer=60;}});
+ bullets.forEach(b=>b.x+=b.vx); bullets=bullets.filter(b=>b.x<325&&!L.walls.some(w=>hit(b,w))); enemyBullets.forEach(b=>{b.x+=b.vx;b.y+=b.vy;if(hit(player,b)) {b.dead=true;resetPlayer();}}); enemyBullets=enemyBullets.filter(b=>!b.dead&&b.x>-5&&b.x<325&&b.y>-5&&b.y<185);
+ L.enemies.forEach(e=>{if(e.dead)return;if(e.type==="patrol"){e[e.axis]+=e.dir*.7;if(Math.abs(e[e.axis]-(e.axis==='x'?e.ox:e.oy))>e.range)e.dir*=-1;}if(e.type==="chase"){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;if(d<90){e.x+=dx/d*.45;e.y+=dy/d*.45;}}if(e.type==="turret"){if(--e.cool<=0){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;enemyBullets.push({x:e.x+5,y:e.y+5,vx:dx/d*1.4,vy:dy/d*1.4,size:3});e.cool=75;}}if(hit(player,{x:e.x,y:e.y,w:10,h:10}))resetPlayer(); bullets.forEach(b=>{if(!e.dead&&hit(b,{x:e.x,y:e.y,w:10,h:10})){e.dead=true;b.x=999;}})});bullets=bullets.filter(b=>b.x<325);
+ if(hit(player,L.portal)){if(keys<L.keys.length){message="PORTAL LOCKED // KEYS "+keys+"/"+L.keys.length;messageTimer=60;}else{level=(level+1)%levels.length;loadLevel();}}
 }
-
-
-
-
-
-
-
-// -------------------------------
-// UPDATE
-// -------------------------------
-
-
-function update(){
-
-
-
-if(input.LEFT)
-
-player.x-=player.speed;
-
-
-
-if(input.RIGHT)
-
-player.x+=player.speed;
-
-
-
-if(input.UP)
-
-player.y-=player.speed;
-
-
-
-if(input.DOWN)
-
-player.y+=player.speed;
-
-
-
-
-
-// screen wrap
-
-
-if(player.x < 0)
-
-player.x=canvas.width-player.size;
-
-
-
-if(player.x > canvas.width)
-
-player.x=0;
-
-
-
-if(player.y < 0)
-
-player.y=canvas.height-player.size;
-
-
-
-if(player.y > canvas.height)
-
-player.y=0;
-
-
-
-
-
-
-// portal collision
-
-
-let p=
-levels[level].portal;
-
-
-
-if(
-
-player.x < p.x+p.size &&
-
-player.x+player.size > p.x &&
-
-player.y < p.y+p.size &&
-
-player.y+player.size > p.y
-
-){
-
-
-level++;
-
-
-if(level>=levels.length)
-
-level=0;
-
-
-
-loadLevel();
-
-
-}
-
-
-
-}
-
-
-
-
-
-
-
-
-
-// -------------------------------
-// DRAW
-// -------------------------------
-
-
-function draw(){
-
-
-
-ctx.fillStyle="#050505";
-
-ctx.fillRect(
-0,
-0,
-canvas.width,
-canvas.height
-);
-
-
-
-
-// grid
-
-ctx.strokeStyle="#003300";
-
-
-for(let x=0;x<320;x+=16){
-
-ctx.beginPath();
-
-ctx.moveTo(x,0);
-
-ctx.lineTo(x,180);
-
-ctx.stroke();
-
-}
-
-
-
-for(let y=0;y<180;y+=16){
-
-ctx.beginPath();
-
-ctx.moveTo(0,y);
-
-ctx.lineTo(320,y);
-
-ctx.stroke();
-
-}
-
-
-
-
-// portal
-
-
-let p=
-levels[level].portal;
-
-
-ctx.strokeStyle="#00ffff";
-
-ctx.lineWidth=2;
-
-
-ctx.strokeRect(
-
-p.x,
-
-p.y,
-
-p.size,
-
-p.size
-
-);
-
-
-
-
-
-// player
-
-
-ctx.fillStyle="#00ff55";
-
-
-ctx.fillRect(
-
-player.x,
-
-player.y,
-
-player.size,
-
-player.size
-
-);
-
-
-
-
-
-
-// text
-
-
-ctx.fillStyle="#00ff55";
-
-ctx.font="8px monospace";
-
-
-ctx.fillText(
-
-levels[level].name,
-
-5,
-
-10
-
-);
-
-
-
-}
-
-
-
-
-
-
-
-// -------------------------------
-// GAME LOOP
-// -------------------------------
-
-
-function gameLoop(){
-
-
-update();
-
-draw();
-
-
-requestAnimationFrame(gameLoop);
-
-
-}
-
-
-let gameStarted=false;
-
-
-function startGameEngine(){
-
-if(!gameStarted){
-
-gameStarted=true;
-
-gameLoop();
-
-}
-
-}
-
-
+function draw(){let L=levels[level];ctx.fillStyle="#050505";ctx.fillRect(0,0,320,180);ctx.strokeStyle="#003300";ctx.lineWidth=1;for(let x=0;x<320;x+=16){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,180);ctx.stroke()}for(let y=0;y<180;y+=16){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(320,y);ctx.stroke()}
+ ctx.fillStyle="#004d22";L.walls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));L.doors.forEach(d=>{if(!d.open){ctx.fillStyle="#ff9900";ctx.fillRect(d.x,d.y,d.w,d.h)}});L.keys.forEach(k=>{if(!k.got){ctx.fillStyle="#ffff00";ctx.fillRect(k.x,k.y,7,7);ctx.fillStyle="#050505";ctx.fillRect(k.x+2,k.y+2,3,3)}});
+ ctx.strokeStyle=keys>=L.keys.length?"#00ffff":"#006666";ctx.lineWidth=2;ctx.strokeRect(L.portal.x,L.portal.y,L.portal.w,L.portal.h);ctx.fillStyle="#00ffff";ctx.font="7px monospace";if(keys>=L.keys.length)ctx.fillText("EXIT",L.portal.x-1,L.portal.y-3);
+ L.enemies.forEach(e=>{if(e.dead)return;ctx.fillStyle=e.type==="turret"?"#ff00ff":"#ff3344";ctx.fillRect(e.x,e.y,10,10);if(e.type==="turret"){ctx.fillStyle="#fff";ctx.fillRect(e.x+4,e.y+4,2,2)}});ctx.fillStyle="#00ffff";bullets.forEach(b=>ctx.fillRect(b.x,b.y,3,2));ctx.fillStyle="#ff8800";enemyBullets.forEach(b=>ctx.fillRect(b.x,b.y,3,3));ctx.fillStyle="#00ff55";ctx.fillRect(player.x,player.y,player.size,player.size);
+ ctx.fillStyle="#00ff55";ctx.font="8px monospace";ctx.fillText((level+1).toString().padStart(2,"0")+" "+L.name,5,10);ctx.fillText("KEY "+keys+"/"+L.keys.length+"  HP "+player.hp,220,10);if(messageTimer>0){ctx.fillStyle="rgba(0,0,0,.8)";ctx.fillRect(18,155,284,17);ctx.strokeStyle="#00ff55";ctx.strokeRect(18,155,284,17);ctx.fillStyle="#00ff55";ctx.fillText(message,25,166)}}
+function gameLoop(){update();draw();requestAnimationFrame(gameLoop)}let gameStarted=false;function startGameEngine(){if(!gameStarted){gameStarted=true;loadLevel();gameLoop();}}
 </script>
 
 
